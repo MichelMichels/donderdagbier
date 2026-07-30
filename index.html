@@ -1,0 +1,534 @@
+<!doctype html>
+<html lang="nl-BE">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Donderdagbier.be | De ultieme caféwijzer van Waregem</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              amber: {
+                50: "#fdf8ee",
+                100: "#fbf0d5",
+                400: "#fbbf24",
+                500: "#f59e0b",
+                600: "#d97706",
+                900: "#78350f",
+              },
+              dark: {
+                900: "#0f172a",
+                800: "#1e293b",
+                700: "#334155",
+              },
+            },
+            fontFamily: {
+              sans: ["Plus Jakarta Sans", "sans-serif"],
+            },
+          },
+        },
+      };
+    </script>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <!-- Lucide Icons (for beautiful lightweight icons) -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+      body {
+        font-family: "Plus Jakarta Sans", sans-serif;
+      }
+    </style>
+  </head>
+  <body
+    class="bg-dark-900 text-slate-100 min-h-screen flex flex-col antialiased selection:bg-amber-500 selection:text-dark-900"
+  >
+    <!-- Header -->
+    <header
+      class="border-b border-slate-800/80 bg-dark-900/90 backdrop-blur sticky top-0 z-50"
+    >
+      <div
+        class="max-w-5xl mx-auto px-4 py-4 flex items-center justify-between"
+      >
+        <div class="flex items-center gap-2">
+          <div class="p-2 bg-amber-500 rounded-xl text-dark-900">
+            <i data-lucide="beer" class="w-6 h-6 stroke-[2.5]"></i>
+          </div>
+          <span
+            class="text-xl font-extrabold tracking-tight bg-gradient-to-r from-amber-400 to-amber-600 bg-clip-text text-transparent"
+          >
+            donderdagbier<span class="text-slate-400">.be</span>
+          </span>
+        </div>
+        <div>
+          <span
+            class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-amber-500/10 text-amber-400 border border-amber-500/20"
+          >
+            <span
+              class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"
+            ></span>
+            Under Construction
+          </span>
+        </div>
+      </div>
+    </header>
+
+    <!-- Hero Section -->
+    <main class="flex-grow">
+      <section class="max-w-5xl mx-auto px-4 pt-12 pb-16 text-center">
+        <div
+          class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-800 text-slate-300 text-sm mb-6 border border-slate-700/50"
+        >
+          <i data-lucide="map-pin" class="w-4 h-4 text-amber-500"></i>
+          <span>Exclusief voor Waregem</span>
+        </div>
+
+        <h1
+          class="text-4xl md:text-6xl font-extrabold tracking-tight text-white mb-6 leading-tight"
+        >
+          Donderdag is pintjesdag.<br />
+          <span
+            class="bg-gradient-to-r from-amber-400 via-amber-500 to-amber-600 bg-clip-text text-transparent"
+          >
+            Welk café scoort 't best?
+          </span>
+        </h1>
+
+        <p
+          class="text-lg text-slate-400 max-w-2xl mx-auto mb-8 leading-relaxed"
+        >
+          Of je nu kiest voor een frisse pint na het werk op de Markt, of een
+          gezellige babbel in een bruine kroeg. Binnenkort beoordeel en ontdek
+          je hier de beste cafés van Waregem op donderdagavond.
+        </p>
+
+        <!-- Call to Action Form -->
+        <div
+          id="signup-container"
+          class="max-w-md mx-auto bg-dark-805 p-1 rounded-2xl border border-slate-800 bg-slate-900/50 backdrop-blur shadow-2xl"
+        >
+          <form id="beta-form" class="flex flex-col sm:flex-row gap-2">
+            <input
+              type="email"
+              id="email-input"
+              placeholder="Jouw e-mailadres..."
+              required
+              class="bg-transparent text-white placeholder-slate-500 px-4 py-3.5 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500 flex-grow text-base"
+            />
+            <button
+              type="submit"
+              class="bg-amber-500 hover:bg-amber-600 active:scale-[0.98] transition-all text-dark-900 font-bold px-6 py-3.5 rounded-xl flex items-center justify-center gap-2 text-base shadow-lg shadow-amber-500/20"
+            >
+              <span>Laat me weten wanneer we starten</span>
+              <i data-lucide="arrow-right" class="w-5 h-5"></i>
+            </button>
+          </form>
+          <div id="success-message" class="hidden p-4 text-center">
+            <div
+              class="inline-flex p-2 bg-emerald-500/10 text-emerald-400 rounded-full mb-2 border border-emerald-500/20"
+            >
+              <i data-lucide="check" class="w-6 h-6"></i>
+            </div>
+            <h3 class="text-lg font-bold text-white">
+              Schol! Je staat op de lijst.
+            </h3>
+            <p class="text-slate-400 text-sm mt-1">
+              We sturen je een seintje zodra de bierkaart online gaat.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Preview Section -->
+      <section class="border-t border-slate-800/80 bg-slate-950/40 py-16">
+        <div class="max-w-5xl mx-auto px-4">
+          <div
+            class="flex flex-col md:flex-row md:items-end justify-between mb-8 gap-4"
+          >
+            <div>
+              <h2 class="text-2xl md:text-3xl font-bold text-white mb-2">
+                Alvast een voorproefje
+              </h2>
+              <p class="text-slate-400">
+                Zoek en filter door de eerste genomineerde staminees.
+              </p>
+            </div>
+            <!-- Search Bar -->
+            <div class="relative w-full md:w-80">
+              <i
+                data-lucide="search"
+                class="absolute left-3.5 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500"
+              ></i>
+              <input
+                type="text"
+                id="search-bar"
+                placeholder="Zoek een café in Waregem..."
+                class="w-full bg-slate-900 border border-slate-800 rounded-xl py-2.5 pl-11 pr-4 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-amber-500 text-sm"
+              />
+            </div>
+          </div>
+
+          <!-- Cafés Grid -->
+          <div id="cafes-grid" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- Card 1 -->
+            <div
+              class="cafe-card bg-slate-900/50 border border-slate-800/80 rounded-2xl p-6 hover:border-amber-500/30 transition-all group"
+              data-name="bar choque"
+            >
+              <div class="flex justify-between items-start mb-4">
+                <div>
+                  <span
+                    class="text-xs font-bold uppercase tracking-wider text-amber-500"
+                    >Jong & Levendig</span
+                  >
+                  <h3
+                    class="text-xl font-bold text-white mt-1 group-hover:text-amber-400 transition-colors"
+                  >
+                    Bar Choque
+                  </h3>
+                  <p
+                    class="text-slate-500 text-sm flex items-center gap-1 mt-1"
+                  >
+                    <i data-lucide="map-pin" class="w-3.5 h-3.5"></i> Markt 27,
+                    Waregem
+                  </p>
+                </div>
+                <div
+                  class="flex items-center gap-1 bg-amber-500/10 text-amber-400 px-2.5 py-1 rounded-lg text-sm font-bold border border-amber-500/20"
+                >
+                  <i
+                    data-lucide="star"
+                    class="w-4 h-4 fill-amber-500 stroke-amber-500"
+                  ></i>
+                  <span>4.8</span>
+                </div>
+              </div>
+              <p class="text-slate-400 text-sm mb-6">
+                Dé ontmoetingsplek op de Markt voor de jeugd en wie zich nog
+                jong voelt. Donderdagavond staat garant voor ambiance en de
+                perfecte start van het weekend.
+              </p>
+              <div
+                class="border-t border-slate-800/80 pt-4 flex justify-between items-center text-xs text-slate-500"
+              >
+                <span>Sfeer: <strong class="text-slate-300">Top</strong></span>
+                <span
+                  >Biertemperatuur:
+                  <strong class="text-slate-300">Ijskoud</strong></span
+                >
+              </div>
+            </div>
+
+            <!-- Card 2 -->
+            <div
+              class="cafe-card bg-slate-900/50 border border-slate-800/80 rounded-2xl p-6 hover:border-amber-500/30 transition-all group"
+              data-name="markt 28"
+            >
+              <div class="flex justify-between items-start mb-4">
+                <div>
+                  <span
+                    class="text-xs font-bold uppercase tracking-wider text-amber-500"
+                    >Gezellig Volkscafé</span
+                  >
+                  <h3
+                    class="text-xl font-bold text-white mt-1 group-hover:text-amber-400 transition-colors"
+                  >
+                    Markt 28
+                  </h3>
+                  <p
+                    class="text-slate-500 text-sm flex items-center gap-1 mt-1"
+                  >
+                    <i data-lucide="map-pin" class="w-3.5 h-3.5"></i> Aan Park
+                    Casier, Waregem
+                  </p>
+                </div>
+                <div
+                  class="flex items-center gap-1 bg-amber-500/10 text-amber-400 px-2.5 py-1 rounded-lg text-sm font-bold border border-amber-500/20"
+                >
+                  <i
+                    data-lucide="star"
+                    class="w-4 h-4 fill-amber-500 stroke-amber-500"
+                  ></i>
+                  <span>4.6</span>
+                </div>
+              </div>
+              <p class="text-slate-400 text-sm mb-6">
+                Gezellig volkscafé vlak aan het prachtige park Casier. Een heel
+                diverse mix van leeftijden waar de babbel centraal staat bij een
+                goed glas bier.
+              </p>
+              <div
+                class="border-t border-slate-800/80 pt-4 flex justify-between items-center text-xs text-slate-500"
+              >
+                <span
+                  >Sfeer: <strong class="text-slate-300">Gezellig</strong></span
+                >
+                <span
+                  >Biertemperatuur:
+                  <strong class="text-slate-300">Perfect</strong></span
+                >
+              </div>
+            </div>
+
+            <!-- Card 3 -->
+            <div
+              class="cafe-card bg-slate-900/50 border border-slate-800/80 rounded-2xl p-6 hover:border-amber-500/30 transition-all group"
+              data-name="t labierint"
+            >
+              <div class="flex justify-between items-start mb-4">
+                <div>
+                  <span
+                    class="text-xs font-bold uppercase tracking-wider text-amber-500"
+                    >Speciaalbier</span
+                  >
+                  <h3
+                    class="text-xl font-bold text-white mt-1 group-hover:text-amber-400 transition-colors"
+                  >
+                    't Labierint
+                  </h3>
+                  <p
+                    class="text-slate-500 text-sm flex items-center gap-1 mt-1"
+                  >
+                    <i data-lucide="map-pin" class="w-3.5 h-3.5"></i> Waregem
+                    Centrum
+                  </p>
+                </div>
+                <div
+                  class="flex items-center gap-1 bg-amber-500/10 text-amber-400 px-2.5 py-1 rounded-lg text-sm font-bold border border-amber-500/20"
+                >
+                  <i
+                    data-lucide="star"
+                    class="w-4 h-4 fill-amber-500 stroke-amber-500"
+                  ></i>
+                  <span>4.9</span>
+                </div>
+              </div>
+              <p class="text-slate-400 text-sm mb-6">
+                Voor de fijnproevers die op donderdag liever een stevige
+                trappist of een lokaal speciaalbier degusteren in een authentiek
+                kader.
+              </p>
+              <div
+                class="border-t border-slate-800/80 pt-4 flex justify-between items-center text-xs text-slate-500"
+              >
+                <span
+                  >Sfeer: <strong class="text-slate-300">Klassiek</strong></span
+                >
+                <span
+                  >Kaart:
+                  <strong class="text-slate-300">Zeer Uitgebreid</strong></span
+                >
+              </div>
+            </div>
+
+            <!-- Card 4 (Interactive Rating Demo) -->
+            <div
+              class="cafe-card bg-slate-900/50 border-2 border-dashed border-slate-800 rounded-2xl p-6 flex flex-col justify-between"
+              data-name="jouw favoriet"
+            >
+              <div>
+                <div
+                  class="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-amber-500/10 text-amber-400 text-xs font-bold mb-3"
+                >
+                  <i data-lucide="sparkles" class="w-3 h-3"></i>
+                  <span>Test het uit</span>
+                </div>
+                <h3 class="text-xl font-bold text-white mb-2">
+                  Jouw favoriete staminee?
+                </h3>
+                <p class="text-slate-400 text-sm mb-4">
+                  Geef deze denkbeeldige kroeg alvast een score om te zien hoe
+                  eenvoudig het stemmen straks zal werken.
+                </p>
+              </div>
+
+              <!-- Interactive Stars -->
+              <div
+                class="bg-slate-950/60 p-4 rounded-xl border border-slate-800/80"
+              >
+                <div class="flex justify-center gap-2 mb-2">
+                  <button
+                    onclick="rate(1)"
+                    class="star-btn text-slate-600 hover:text-amber-400 transition-colors"
+                  >
+                    <i data-lucide="star" class="w-8 h-8"></i>
+                  </button>
+                  <button
+                    onclick="rate(2)"
+                    class="star-btn text-slate-600 hover:text-amber-400 transition-colors"
+                  >
+                    <i data-lucide="star" class="w-8 h-8"></i>
+                  </button>
+                  <button
+                    onclick="rate(3)"
+                    class="star-btn text-slate-600 hover:text-amber-400 transition-colors"
+                  >
+                    <i data-lucide="star" class="w-8 h-8"></i>
+                  </button>
+                  <button
+                    onclick="rate(4)"
+                    class="star-btn text-slate-600 hover:text-amber-400 transition-colors"
+                  >
+                    <i data-lucide="star" class="w-8 h-8"></i>
+                  </button>
+                  <button
+                    onclick="rate(5)"
+                    class="star-btn text-slate-600 hover:text-amber-400 transition-colors"
+                  >
+                    <i data-lucide="star" class="w-8 h-8"></i>
+                  </button>
+                </div>
+                <p id="rating-text" class="text-center text-xs text-slate-500">
+                  Klik op de sterren om te stemmen
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Features / Info section -->
+      <section class="max-w-5xl mx-auto px-4 py-16">
+        <h2 class="text-2xl md:text-3xl font-bold text-center text-white mb-12">
+          Wat mag je verwachten?
+        </h2>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div class="text-center">
+            <div
+              class="w-12 h-12 bg-amber-500/10 text-amber-500 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-amber-500/20"
+            >
+              <i data-lucide="sliders" class="w-6 h-6"></i>
+            </div>
+            <h3 class="text-lg font-bold text-white mb-2">Eerlijke criteria</h3>
+            <p class="text-slate-400 text-sm leading-relaxed">
+              We beoordelen niet zomaar. We kijken naar de temperatuur van het
+              bier, de sfeer, de service en natuurlijk de prijs van een pintje.
+            </p>
+          </div>
+          <div class="text-center">
+            <div
+              class="w-12 h-12 bg-amber-500/10 text-amber-500 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-amber-500/20"
+            >
+              <i data-lucide="users" class="w-6 h-6"></i>
+            </div>
+            <h3 class="text-lg font-bold text-white mb-2">
+              Door & voor Waregemnaars
+            </h3>
+            <p class="text-slate-400 text-sm leading-relaxed">
+              Geen vage online reviews van toeristen, maar echte meningen van de
+              mensen die wekelijks de sfeer maken in de Waregemse horeca.
+            </p>
+          </div>
+          <div class="text-center">
+            <div
+              class="w-12 h-12 bg-amber-500/10 text-amber-500 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-amber-500/20"
+            >
+              <i data-lucide="award" class="w-6 h-6"></i>
+            </div>
+            <h3 class="text-lg font-bold text-white mb-2">
+              Wekelijkse ranking
+            </h3>
+            <p class="text-slate-400 text-sm leading-relaxed">
+              Elke vrijdagmorgen maken we de balans op. Wie kroont zich tot het
+              gezelligste donderdagcafé van de week?
+            </p>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- Footer -->
+    <footer
+      class="border-t border-slate-800 bg-slate-950/80 py-12 text-slate-500 text-sm"
+    >
+      <div
+        class="max-w-5xl mx-auto px-4 flex flex-col md:flex-row items-center justify-between gap-6"
+      >
+        <div class="flex items-center gap-2">
+          <div class="p-1.5 bg-slate-800 rounded-lg text-amber-500">
+            <i data-lucide="beer" class="w-5 h-5"></i>
+          </div>
+          <span class="font-bold text-slate-300">donderdagbier.be</span>
+        </div>
+        <p class="text-center md:text-right">
+          &copy; 2026 donderdagbier.be. Gemaakt met passie voor de Waregemse
+          horeca. Schol!
+        </p>
+      </div>
+    </footer>
+
+    <!-- Interactive Scripts -->
+    <script>
+      // Initialize Lucide Icons
+      lucide.createIcons();
+
+      // Search filter logic
+      const searchBar = document.getElementById("search-bar");
+      const cafeCards = document.querySelectorAll(".cafe-card");
+
+      searchBar.addEventListener("input", (e) => {
+        const query = e.target.value.toLowerCase().trim();
+        cafeCards.forEach((card) => {
+          const name = card.getAttribute("data-name");
+          if (name.includes(query)) {
+            card.style.display = "flex";
+          } else {
+            card.style.display = "none";
+          }
+        });
+      });
+
+      // Interactive Rating Demonstration
+      function rate(stars) {
+        const starButtons = document.querySelectorAll(".star-btn");
+        const ratingText = document.getElementById("rating-text");
+
+        starButtons.forEach((btn, index) => {
+          const icon = btn.querySelector("i");
+          if (index < stars) {
+            icon.classList.add("fill-amber-500", "text-amber-500");
+            icon.classList.remove("text-slate-600");
+          } else {
+            icon.classList.remove("fill-amber-500", "text-amber-500");
+            icon.classList.add("text-slate-600");
+          }
+        });
+
+        const feedbackMessages = [
+          "Oei, dat kan beter... 🍺",
+          "Matig pintje, wel gezellig. 👍",
+          "Degelijke staminee! 🍻",
+          "Super sfeer en koud bier! 😍",
+          "Beste café van heel Waregem! 🏆",
+        ];
+
+        ratingText.innerText = `Je gaf ${stars} sterren: "${feedbackMessages[stars - 1]}"`;
+        ratingText.classList.remove("text-slate-500");
+        ratingText.classList.add("text-amber-400", "font-semibold");
+      }
+
+      // Email Form Submission Mockup
+      const form = document.getElementById("beta-form");
+      const signupContainer = document.getElementById("signup-container");
+      const successMessage = document.getElementById("success-message");
+
+      form.addEventListener("submit", (e) => {
+        e.preventDefault();
+        const email = document.getElementById("email-input").value;
+
+        if (email) {
+          form.classList.add("hidden");
+          successMessage.classList.remove("hidden");
+          // You can send this email payload to your backend here
+        }
+      });
+    </script>
+  </body>
+</html>
