@@ -55,29 +55,35 @@
       <div
         class="max-w-5xl mx-auto px-4 py-4 flex items-center justify-between"
       >
-        <button
-          onclick="showPage('overview')"
-          class="flex items-center gap-2 group text-left focus:outline-none"
-        >
-          <div
-            class="p-2 bg-amber-500 rounded-xl text-dark-900 group-hover:scale-105 transition-transform"
+        <div class="flex items-center gap-2">
+          <!-- Double click this logo for Zatlap Modus -->
+          <button
+            id="header-logo"
+            class="p-2 bg-amber-500 rounded-xl text-dark-900 hover:scale-105 transition-transform focus:outline-none cursor-pointer"
+            title="Dubbelklik voor een verrassing!"
           >
             <i data-lucide="beer" class="w-6 h-6 stroke-[2.5]"></i>
-          </div>
-          <div>
+          </button>
+          <button
+            onclick="showPage('overview')"
+            class="text-left focus:outline-none"
+          >
             <span
+              id="header-title"
               class="text-xl font-extrabold tracking-tight bg-gradient-to-r from-amber-400 to-amber-600 bg-clip-text text-transparent block"
             >
               donderdagbier<span class="text-slate-400">.be</span>
             </span>
             <span
-              class="text-[10px] text-slate-500 uppercase tracking-wider font-bold"
+              id="header-subtitle"
+              class="text-[10px] text-slate-500 uppercase tracking-wider font-bold transition-all"
               >Waregemse Caféwijzer</span
             >
-          </div>
-        </button>
+          </button>
+        </div>
         <div class="flex items-center gap-3">
           <span
+            id="season-badge"
             class="hidden sm:inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-amber-500/10 text-amber-400 border border-amber-500/20"
           >
             <span
@@ -99,14 +105,16 @@
             class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-900 text-slate-300 text-xs font-semibold mb-6 border border-slate-800"
           >
             <i data-lucide="map-pin" class="w-3.5 h-3.5 text-amber-500"></i>
-            <span>36 Waregemse cafés op de radar</span>
+            <span id="radar-text">36 Waregemse cafés op de radar</span>
           </div>
           <h1
+            id="main-hero-title"
             class="text-4xl md:text-5xl font-extrabold tracking-tight text-white mb-4"
           >
             De Waregemse Donderdagtraditie
           </h1>
           <p
+            id="main-hero-desc"
             class="text-slate-400 max-w-2xl mx-auto text-sm md:text-base leading-relaxed"
           >
             Elke donderdag trekken we op pad om de lokale staminees in Waregem
@@ -118,6 +126,7 @@
         <!-- Leaderboard / Highlight -->
         <section class="mb-12">
           <h2
+            id="leaderboard-title"
             class="text-xs font-bold uppercase tracking-wider text-slate-500 mb-4 flex items-center gap-2"
           >
             <i data-lucide="crown" class="w-4 h-4 text-amber-500"></i>
@@ -645,10 +654,47 @@
         <div
           class="relative border-l-2 border-slate-800 ml-3 pl-6 space-y-10 py-4"
         >
-          <!-- v1.4.0 -->
+          <!-- v1.5.0 -->
           <div class="relative">
             <span
               class="absolute -left-[31px] top-1.5 bg-amber-500 text-dark-900 rounded-full p-1 border-4 border-dark-950"
+            >
+              <i data-lucide="git-commit" class="w-3 h-3"></i>
+            </span>
+            <div class="flex flex-wrap items-center gap-2 mb-1">
+              <span class="text-white font-extrabold text-lg"
+                >Versie 1.5.0</span
+              >
+              <span
+                class="text-xs bg-slate-900 border border-slate-800 text-slate-400 px-2 py-0.5 rounded font-mono"
+                >30/07/2026</span
+              >
+            </div>
+            <p class="text-slate-300 text-sm font-semibold mb-2">
+              De Grote Easter Egg Update
+            </p>
+            <ul
+              class="list-disc list-inside text-slate-400 text-xs space-y-1 pl-1"
+            >
+              <li>
+                **Stamcafé Den Hemel**: Speciaal interactief venster toegevoegd
+                wanneer men op ons heiligdom klikt.
+              </li>
+              <li>
+                **Zatlap Modus**: Activeer een wiebelend scherm en lallende
+                teksten door te dubbelklikken op het bier-icoontje in de header.
+              </li>
+              <li>
+                **Bierdouche**: Typ "bier" op je toetsenbord om een stortbui van
+                bier-emojis te activeren.
+              </li>
+            </ul>
+          </div>
+
+          <!-- v1.4.0 -->
+          <div class="relative">
+            <span
+              class="absolute -left-[31px] top-1.5 bg-slate-800 text-slate-400 rounded-full p-1 border-4 border-dark-950"
             >
               <i data-lucide="git-commit" class="w-3 h-3"></i>
             </span>
@@ -853,7 +899,7 @@
             class="text-[10px] bg-slate-900 hover:bg-slate-800 border border-slate-800 hover:border-slate-700 px-2 py-0.5 rounded text-slate-400 hover:text-amber-400 font-mono transition-colors"
             title="Bekijk changelog"
           >
-            v1.4.0
+            v1.5.0
           </button>
         </div>
         <p class="text-center md:text-right">

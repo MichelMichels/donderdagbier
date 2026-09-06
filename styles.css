@@ -28,3 +28,57 @@
     transform: translateY(0);
   }
 }
+
+/* ================= EASTER EGGS CSS ================= */
+
+/* Drunk Mode Effect */
+body.drunk {
+  animation: wobble 4s ease-in-out infinite alternate;
+  filter: sepia(0.1) contrast(1.05);
+  transition: filter 0.5s ease;
+}
+
+@keyframes wobble {
+  0% {
+    transform: rotate(0.2deg) translateY(1px);
+  }
+  50% {
+    transform: rotate(-0.2deg) translateY(-1px) translateX(1px);
+    filter: blur(0.3px);
+  }
+  100% {
+    transform: rotate(0.2deg) translateY(1px) translateX(-1px);
+  }
+}
+
+/* Rain Effect for Beer Emojis */
+.beer-drop {
+  position: fixed;
+  top: -50px;
+  font-size: 2rem;
+  z-index: 1000;
+  pointer-events: none;
+  animation: fall linear forwards;
+}
+
+@keyframes fall {
+  to {
+    transform: translateY(105vh) rotate(360deg);
+  }
+}
+
+/* Celestial Glow Effect for Den Hemel Stamcafé card */
+.heavenly-glow {
+  box-shadow: 0 0 20px rgba(245, 158, 11, 0.25);
+  border-color: rgba(245, 158, 11, 0.6) !important;
+  animation: pulseGlow 2s infinite alternate;
+}
+
+@keyframes pulseGlow {
+  from {
+    box-shadow: 0 0 10px rgba(245, 158, 11, 0.15);
+  }
+  to {
+    box-shadow: 0 0 25px rgba(245, 158, 11, 0.4);
+  }
+}
