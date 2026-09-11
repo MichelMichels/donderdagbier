@@ -29,7 +29,7 @@
   }
 }
 
-/* ================= EASTER EGGS CSS ================= */
+/* ================= EASTER EGGS & ROULETTE CSS ================= */
 
 /* Drunk Mode Effect */
 body.drunk {
@@ -80,5 +80,25 @@ body.drunk {
   }
   to {
     box-shadow: 0 0 25px rgba(245, 158, 11, 0.4);
+  }
+}
+
+/* Roulette roll animation */
+.roulette-spinning {
+  animation: spinText 0.15s linear infinite;
+}
+
+@keyframes spinText {
+  0% {
+    transform: translateY(-3px);
+    opacity: 0.5;
+  }
+  50% {
+    transform: translateY(3px);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(-3px);
+    opacity: 0.5;
   }
 }
