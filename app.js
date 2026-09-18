@@ -1,9 +1,9 @@
 /**
  * Donderdagbier.be - Application Logic, Database, Roulette & Easter Eggs
- * Versie: v1.6.1
+ * Versie: v1.8.0
  */
 
-// De complete, actieve lijst van cafés (enkel 8790 Waregem, Sportcafé Desselgem is verwijderd en De Regenboog is toegevoegd)
+// De complete, actieve lijst van cafés (enkel 8790 Waregem)
 const cafesList = [
   {
     name: "Hermanos",
@@ -71,7 +71,6 @@ const cafesList = [
     pricePicon: null,
     note: null,
   },
-  // Sportcafé Desselgem is verwijderd conform beslissing "geen cafés buiten Waregem"
   {
     name: "De Treffer",
     rated: true,
@@ -91,7 +90,7 @@ const cafesList = [
     visitDate: "10/09/2026",
     seating: "Terras",
     pricePils: "€2.50",
-    pricePicon: null, // Geen picon beschikbaar
+    pricePicon: null,
     note: "Geen picon, 1 rondje van de bazin",
   },
   {
@@ -305,14 +304,14 @@ const cafesList = [
   },
   {
     name: "Karekiet",
-    rated: false,
-    score: null,
+    rated: true,
+    score: "71.06%",
     location: "Waregem",
-    visitDate: null,
-    seating: null,
-    pricePils: null,
-    pricePicon: null,
-    note: null,
+    visitDate: "17/09/2026",
+    seating: "Terras",
+    pricePils: "€2.40",
+    pricePicon: "€9.00",
+    note: "Terrasoverkapping, bediening heeft lichtjes ingeschakeld voor gezelligheid",
   },
   {
     name: "'t Labierint",
@@ -402,6 +401,84 @@ const cafesList = [
     pricePicon: null,
     note: null,
   },
+  // 7 Nieuwe cafés toegevoegd in v1.8.0
+  {
+    name: "Enigma bar",
+    rated: false,
+    score: null,
+    location: "Waregem",
+    visitDate: null,
+    seating: null,
+    pricePils: null,
+    pricePicon: null,
+    note: null,
+  },
+  {
+    name: "De Loskaai",
+    rated: false,
+    score: null,
+    location: "Waregem",
+    visitDate: null,
+    seating: null,
+    pricePils: null,
+    pricePicon: null,
+    note: null,
+  },
+  {
+    name: "'t Fonteintje",
+    rated: false,
+    score: null,
+    location: "Waregem",
+    visitDate: null,
+    seating: null,
+    pricePils: null,
+    pricePicon: null,
+    note: null,
+  },
+  {
+    name: "De Gilde",
+    rated: false,
+    score: null,
+    location: "Waregem",
+    visitDate: null,
+    seating: null,
+    pricePils: null,
+    pricePicon: null,
+    note: null,
+  },
+  {
+    name: "Den Dries",
+    rated: false,
+    score: null,
+    location: "Waregem",
+    visitDate: null,
+    seating: null,
+    pricePils: null,
+    pricePicon: null,
+    note: null,
+  },
+  {
+    name: "Neerhof",
+    rated: false,
+    score: null,
+    location: "Waregem",
+    visitDate: null,
+    seating: null,
+    pricePils: null,
+    pricePicon: null,
+    note: null,
+  },
+  {
+    name: "Halve maan",
+    rated: false,
+    score: null,
+    location: "Waregem",
+    visitDate: null,
+    seating: null,
+    pricePils: null,
+    pricePicon: null,
+    note: null,
+  },
 ];
 
 let currentFilter = "all";
@@ -432,10 +509,11 @@ function renderCafes() {
     const card = document.createElement("div");
 
     if (cafe.rated) {
-      const targetPage =
-        cafe.name.toLowerCase() === "de treffer"
-          ? "detail-de-treffer"
-          : "detail-de-regenboog";
+      let targetPage = "detail-de-treffer";
+      if (cafe.name.toLowerCase() === "de regenboog")
+        targetPage = "detail-de-regenboog";
+      if (cafe.name.toLowerCase() === "karekiet")
+        targetPage = "detail-karekiet";
 
       card.className =
         "bg-slate-900/60 border border-amber-500/30 rounded-xl p-5 flex flex-col justify-between hover:border-amber-500/60 transition-all cursor-pointer group";
@@ -687,7 +765,7 @@ function toggleDrunkMode() {
       heroDesc.innerText =
         "W-welk café is nu eige-lijk 't aller-allerbeste? S-schol! We keuren ze alllemaal... of toch degene die we nog vinden!";
     if (searchInput) searchInput.placeholder = "Zheuk een caafé... *hup*";
-    if (radarText) radarText.innerText = "35 caafés... of wa-ren 't er 40?";
+    if (radarText) radarText.innerText = "42 caafés... of wa-ren 't er 50?";
     if (seasonBadge)
       seasonBadge.innerHTML = `<span class="w-2 h-2 rounded-full bg-rose-500 animate-ping"></span> Zatlap Modus Actief!`;
     if (leaderboardTitle)
@@ -703,7 +781,7 @@ function toggleDrunkMode() {
       heroDesc.innerText =
         "Elke donderdag trekken we op pad om de lokale staminees in Waregem te keuren. Enkel echte Waregemse cafés (postcode 8790) komen in aanmerking!";
     if (searchInput) searchInput.placeholder = "Zoek café...";
-    if (radarText) radarText.innerText = "35 Waregemse cafés op de radar";
+    if (radarText) radarText.innerText = "42 Waregemse cafés op de radar";
     if (seasonBadge)
       seasonBadge.innerHTML = `<span class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span> Huidig seizoen 2026`;
     if (leaderboardTitle)
