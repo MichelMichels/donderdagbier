@@ -74,7 +74,20 @@
     "seating": "Terras",
     "pricePils": "€2.80",
     "pricePicon": "€9.00",
-    "note": null
+    "note": null,
+    "displayName": "Sportcafé De Treffer",
+    "address": "Meersstraat 5, 8790 Waregem",
+    "mapsQuery": "Sportcafé De Treffer Meersstraat 5 8790 Waregem",
+    "report": null,
+    "judges": [
+      { "initials": "MM", "scores": [10, 6, 4, 7, 3, 10] },
+      { "initials": "SL", "scores": [8, 7, 5, 6, 4, 9] },
+      { "initials": "LD", "scores": [8, 2, 6, 7, 4, 9] },
+      { "initials": "LV", "scores": [8, 7, 4, 2, 2, 9] },
+      { "initials": "AB", "scores": [8, 9, 5, 7, 2, 10] },
+      { "initials": "GB", "scores": [8, 7, 9, 8, 4, 5] },
+      { "initials": "VV", "scores": [8, 9, 7, 7, 0, 10] }
+    ]
   },
   {
     "name": "De Regenboog",
@@ -85,7 +98,21 @@
     "seating": "Terras",
     "pricePils": "€2.50",
     "pricePicon": null,
-    "note": "Geen picon, 1 rondje van de bazin"
+    "note": "Geen picon, 1 rondje van de bazin",
+    "displayName": "Café De Regenboog",
+    "address": "Waterstraat 35, 8790 Waregem",
+    "mapsQuery": "Cafe De Regenboog Waterstraat 35 8790 Waregem",
+    "report": "Hoewel liefhebbers van een Picon Vin Blanc hier op hun honger bleven zitten wegens <strong class=\"text-rose-400 font-semibold\">geen piconaanbod</strong> op de kaart, werd dit ruimschoots goedgemaakt door de legendarische gastvrijheid van de bazin. De voltallige jury werd namelijk getrakteerd op een <strong class=\"text-emerald-400 font-semibold\">gratis rondje van het huis</strong>! Die gulle geste zette de gezellige donderdagavond meteen in lichterlaaie.",
+    "judges": [
+      { "initials": "CVC", "scores": [8, 0, 7, 5, 5, 5] },
+      { "initials": "MV", "scores": [7, 1, 7, 8, 7, 7] },
+      { "initials": "VV", "scores": [9, 0, 10, 9, 10, 8] },
+      { "initials": "LV", "scores": [7, 0, 10, 8, 10, 9] },
+      { "initials": "AB", "scores": [9, 0, 9, 9, 9, 8] },
+      { "initials": "GB", "scores": [8, 0, 7, 9, 7, 8] },
+      { "initials": "JDB", "scores": [10, 0, 8, 7, 8, 9] },
+      { "initials": "MM", "scores": [5, 0, 9, 10, 7, 8] }
+    ]
   },
   {
     "name": "Bridge",
@@ -305,7 +332,19 @@
     "seating": "Terras",
     "pricePils": "€2.40",
     "pricePicon": "€9.00",
-    "note": "Terrasoverkapping, bediening heeft lichtjes ingeschakeld voor gezelligheid"
+    "note": "Terrasoverkapping, bediening heeft lichtjes ingeschakeld voor gezelligheid",
+    "displayName": "Karekiet",
+    "address": "Bilkhoutstraat 36, 8790 Waregem",
+    "mapsQuery": "Karekiet Bilkhoutstraat 36 8790 Waregem",
+    "report": "Een absolute topavond in de Karekiet! Ondanks de frissere avondlucht was het op het terras uiterst aangenaam toeven dankzij de degelijke <strong class=\"text-amber-400 font-semibold\">terrasoverkapping</strong>. Extra punten voor de proactieve bediening, die attent genoeg was om de <strong class=\"text-amber-400 font-semibold\">sfeerverlichting</strong> in te schakelen om de gezelligheid naar een nog hoger niveau te tillen. Met een uitmuntende score van <strong class=\"text-emerald-400 font-semibold\">71.06%</strong> verovert de Karekiet dan ook verdiend de koppositie!",
+    "judges": [
+      { "initials": "CVC", "scores": [7, 7, 10, 9, 8, 11] },
+      { "initials": "LV", "scores": [7, 5, 9, 7, 9, 10] },
+      { "initials": "MM", "scores": [8, 3, 8, 9, 11, 10] },
+      { "initials": "GB", "scores": [9, 8, 11, 9, 9, 10] },
+      { "initials": "LD", "scores": [8, 7, 8, 9, 10, 8] },
+      { "initials": "VV", "scores": [9, 6, 8, 9, 11, 10] }
+    ]
   },
   {
     "name": "'t Labierint",

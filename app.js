@@ -1,6 +1,6 @@
 /**
  * Donderdagbier.be - Application Logic, Database, Roulette & Easter Eggs
- * Versie: v1.9.0
+ * Versie: v1.10.0
  */
 
 // De complete, actieve lijst van cafés (Groot-Waregem: Waregem en de deelgemeentes Beveren-Leie, Desselgem, Nieuwenhove en Sint-Eloois-Vijve)
@@ -18,6 +18,60 @@ async function loadCafesList() {
   cafesList = await response.json();
 }
 
+// ================= SCOREBEREKENING =================
+// Categorieën van de jurybeoordeling, telkens op een schaal van 0 tot CATEGORY_MAX.
+// Enkel de ruwe scores per jurylid staan in cafes.json; alle gemiddelden,
+// totalen en percentages worden hieruit berekend zodat ze nooit uit sync kunnen raken.
+const JUDGE_CATEGORIES = [
+  "Pils",
+  "Picon",
+  "Bediening",
+  "Gezelligheid",
+  "Muziek",
+  "Aanbod",
+];
+const CATEGORY_MAX = 12;
+
+/**
+ * Bepaalt de pagina-slug (zonder "detail-" prefix) van een beoordeeld café
+ */
+function getCafeSlug(cafe) {
+  const name = cafe.name.toLowerCase();
+  if (name === "de regenboog") return "de-regenboog";
+  if (name === "karekiet") return "karekiet";
+  return "de-treffer";
+}
+
+/**
+ * Berekent de categoriegemiddelden, eindscore en per-jurylid totalen/percentages
+ * op basis van de ruwe jurygegevens van een café. Geeft null terug als er geen
+ * jurygegevens beschikbaar zijn.
+ */
+function computeScoreStats(cafe) {
+  if (!cafe.judges || cafe.judges.length === 0) return null;
+
+  const totalMax = JUDGE_CATEGORIES.length * CATEGORY_MAX;
+
+  const judges = cafe.judges.map((judge) => {
+    const total = judge.scores.reduce((sum, score) => sum + score, 0);
+    const percent = (total / totalMax) * 100;
+    return { ...judge, total, percent };
+  });
+
+  const categoryAverages = JUDGE_CATEGORIES.map((_, index) => {
+    const sum = cafe.judges.reduce(
+      (acc, judge) => acc + judge.scores[index],
+      0,
+    );
+    return sum / cafe.judges.length;
+  });
+
+  const totalPoints =
+    judges.reduce((sum, judge) => sum + judge.total, 0) / judges.length;
+  const percent = (totalPoints / totalMax) * 100;
+
+  return { categoryAverages, totalMax, totalPoints, percent, judges };
+}
 
 let currentFilter = "all";
 let searchQuery = "";
@@ -47,11 +101,9 @@ function renderCafes() {
     const card = document.createElement("div");
 
     if (cafe.rated) {
-      let targetPage = "detail-de-treffer";
-      if (cafe.name.toLowerCase() === "de regenboog")
-        targetPage = "detail-de-regenboog";
-      if (cafe.name.toLowerCase() === "karekiet")
-        targetPage = "detail-karekiet";
+      const targetPage = `detail-${getCafeSlug(cafe)}`;
+      const stats = computeScoreStats(cafe);
+      const scoreText = stats ? `${stats.percent.toFixed(2)}%` : cafe.score;
 
       card.className =
         "bg-slate-900/60 border border-amber-500/30 rounded-xl p-5 flex flex-col justify-between hover:border-amber-500/60 transition-all cursor-pointer group";
@@ -62,7 +114,7 @@ function renderCafes() {
                         <span class="px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 text-[10px] font-bold">Beoordeeld</span>
                         <div class="flex items-center gap-1 text-amber-400 text-xs font-bold">
                             <i data-lucide="star" class="w-3.5 h-3.5 fill-amber-400"></i>
-                            <span>${cafe.score}</span>
+                            <span>${scoreText}</span>
                         </div>
                     </div>
                     <h4 class="text-base font-bold text-white group-hover:text-amber-400 transition-colors">${cafe.name}</h4>
@@ -125,6 +177,304 @@ function renderCafes() {
   });
 
   lucide.createIcons();
+}
+
+/**
+ * Genereert het "Huidige koplopers" leaderboard op basis van de top 3
+ * beoordeelde cafés, gesorteerd op eindscore
+ */
+function renderLeaderboard() {
+  const container = document.getElementById("leaderboard-list");
+  if (!container) return;
+
+  const ranked = cafesList
+    .filter((cafe) => cafe.rated)
+    .map((cafe) => ({ cafe, stats: computeScoreStats(cafe) }))
+    .filter((entry) => entry.stats)
+    .sort((a, b) => b.stats.percent - a.stats.percent)
+    .slice(0, 3);
+
+  const medals = ["🥇", "🥈", "🥉"];
+
+  container.innerHTML = ranked
+    .map(({ cafe, stats }, index) => {
+      const isFirst = index === 0;
+      const targetPage = `detail-${getCafeSlug(cafe)}`;
+      const displayName = cafe.displayName || cafe.name;
+      const shortAddress = (cafe.address || cafe.location).replace(
+        /\b\d{4}\s/,
+        "",
+      );
+      const rankLabel = isFirst
+        ? `${medals[0]} Nr 1 Koploper`
+        : `${medals[index] || ""} Nr ${index + 1}`;
+
+      return `
+        <div
+          onclick="showPage('${targetPage}')"
+          class="${
+            isFirst
+              ? "bg-gradient-to-br from-amber-500/15 via-slate-900/40 to-transparent border border-amber-500/40 rounded-2xl p-5 cursor-pointer hover:border-amber-500/80 transition-all group relative overflow-hidden"
+              : "bg-slate-900/40 border border-slate-800/80 rounded-2xl p-5 cursor-pointer hover:border-amber-500/40 transition-all group"
+          }"
+        >
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <div class="flex flex-wrap items-center gap-2 mb-2">
+                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded ${
+                  isFirst
+                    ? "bg-amber-500 text-dark-900"
+                    : "bg-slate-800 text-slate-400"
+                } text-[10px] font-extrabold uppercase">${rankLabel}</span>
+                <span class="text-[10px] ${
+                  isFirst
+                    ? "bg-slate-800 text-slate-300"
+                    : "bg-slate-800/60 text-slate-400"
+                } px-2 py-0.5 rounded font-medium">Bezocht op ${cafe.visitDate}</span>
+              </div>
+              <h3 class="text-xl ${
+                isFirst
+                  ? "font-extrabold text-white"
+                  : "font-bold text-slate-200"
+              } group-hover:text-amber-400 transition-colors">${displayName}</h3>
+              <p class="text-slate-400 text-xs mt-1 flex items-center gap-1">
+                <i data-lucide="map-pin" class="w-3.5 h-3.5 text-slate-500"></i>
+                ${shortAddress}
+              </p>
+            </div>
+            <div class="flex items-center gap-3 self-end sm:self-auto">
+              <div class="text-right">
+                <span class="block text-[10px] text-slate-500 uppercase font-bold">Score</span>
+                <span class="text-2xl font-black ${
+                  isFirst ? "text-amber-400" : "text-slate-400"
+                }">${stats.percent.toFixed(2)}%</span>
+              </div>
+              <div class="p-2 ${
+                isFirst
+                  ? "bg-amber-500/10 text-amber-400"
+                  : "bg-slate-800 text-slate-400"
+              } rounded-lg group-hover:translate-x-1 transition-transform">
+                <i data-lucide="chevron-right" class="w-5 h-5"></i>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+    })
+    .join("");
+
+  lucide.createIcons();
+}
+
+/**
+ * Vult de detailpagina van een beoordeeld café (header, fiche, juryverslag,
+ * categoriescores en jurytabel) op basis van de data in cafesList
+ */
+function renderCafeDetailContent(cafe) {
+  const stats = computeScoreStats(cafe);
+  if (!stats) return;
+
+  const slug = getCafeSlug(cafe);
+  const container = document.getElementById(`detail-content-${slug}`);
+  if (!container) return;
+
+  const displayName = cafe.displayName || cafe.name;
+  const address = cafe.address || cafe.location;
+  const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
+    cafe.mapsQuery || `${displayName} ${address}`,
+  )}`;
+  const percentText = `${stats.percent.toFixed(2)}%`;
+
+  const piconFiche = cafe.pricePicon
+    ? `
+      <div class="bg-slate-900/50 border border-slate-800/80 rounded-xl p-4 flex items-center gap-4">
+        <div class="p-3 bg-purple-500/10 text-purple-400 rounded-lg">
+          <i data-lucide="glass-water" class="w-5 h-5"></i>
+        </div>
+        <div>
+          <span class="block text-[10px] text-slate-500 uppercase font-bold tracking-wider">Prijs Picon</span>
+          <span class="text-sm font-bold text-white">${cafe.pricePicon}</span>
+        </div>
+      </div>`
+    : `
+      <div class="bg-slate-900/50 border border-slate-800/80 rounded-xl p-4 flex items-center gap-4">
+        <div class="p-3 bg-rose-500/10 text-rose-400 rounded-lg">
+          <i data-lucide="glass-water" class="w-5 h-5"></i>
+        </div>
+        <div>
+          <span class="block text-[10px] text-slate-500 uppercase font-bold tracking-wider">Prijs Picon</span>
+          <span class="text-xs font-bold text-rose-400/80 uppercase">Niet beschikbaar</span>
+        </div>
+      </div>`;
+
+  const reportBlock = cafe.report
+    ? `
+      <div class="bg-amber-500/10 border border-amber-500/20 rounded-2xl p-5 mb-8 relative overflow-hidden">
+        <div class="absolute top-0 right-0 w-24 h-24 bg-amber-500/5 rounded-full blur-2xl"></div>
+        <div class="flex items-start gap-4 relative z-10">
+          <div class="p-2.5 bg-amber-500/20 text-amber-400 rounded-xl mt-0.5">
+            <i data-lucide="message-square" class="w-5 h-5"></i>
+          </div>
+          <div class="space-y-1.5">
+            <span class="block text-[10px] text-amber-500 uppercase font-extrabold tracking-wider">Juryverslag & Sfeerimpressie</span>
+            <p class="text-slate-200 text-sm leading-relaxed">${cafe.report}</p>
+          </div>
+        </div>
+      </div>`
+    : "";
+
+  const categoriesGrid = JUDGE_CATEGORIES.map(
+    (label, index) => `
+      <div class="bg-slate-900/40 border border-slate-800/60 rounded-xl p-4 text-center">
+        <span class="block text-xs text-slate-500 font-semibold mb-1">${label}</span>
+        <span class="text-xl font-bold text-white">${stats.categoryAverages[index].toFixed(1)}</span>
+        <span class="text-[10px] text-slate-500 block">/ ${CATEGORY_MAX}</span>
+      </div>`,
+  ).join("");
+
+  const categoryHeaders = JUDGE_CATEGORIES.map(
+    (label) => `<th class="p-4 text-center">${label}</th>`,
+  ).join("");
+
+  const judgeRows = stats.judges
+    .map(
+      (judge) => `
+      <tr class="hover:bg-slate-900/20">
+        <td class="p-4 font-bold text-white">${judge.initials}</td>
+        ${judge.scores.map((score) => `<td class="p-4 text-center">${score}</td>`).join("")}
+        <td class="p-4 text-right font-semibold">${judge.total}</td>
+        <td class="p-4 text-right text-amber-500 font-semibold">${judge.percent.toFixed(2)}%</td>
+      </tr>`,
+    )
+    .join("");
+
+  const categoryAverageCells = stats.categoryAverages
+    .map(
+      (avg) =>
+        `<td class="p-4 text-center text-amber-400">${avg.toFixed(1)}</td>`,
+    )
+    .join("");
+
+  container.innerHTML = `
+    <!-- Cafe Header -->
+    <div class="bg-slate-900/40 border border-slate-800/80 rounded-2xl p-6 md:p-8 mb-6 relative overflow-hidden">
+      <div class="absolute top-0 right-0 w-48 h-48 bg-amber-500/5 rounded-full blur-3xl -mr-12 -mt-12"></div>
+      <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 relative z-10">
+        <div>
+          <div class="flex flex-wrap items-center gap-2 mb-3">
+            <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded bg-emerald-500/10 text-emerald-400 text-xs font-bold">
+              <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+              Bezocht
+            </span>
+            <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded bg-slate-800 text-slate-300 text-xs font-semibold">
+              <i data-lucide="calendar" class="w-3.5 h-3.5 text-amber-500"></i>
+              <span>Bezocht op ${cafe.visitDate}</span>
+            </span>
+          </div>
+          <h1 class="text-3xl md:text-4xl font-black text-white">${displayName}</h1>
+
+          <!-- Google Maps Link -->
+          <a
+            href="${mapsUrl}"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="text-slate-400 hover:text-amber-400 text-sm mt-2.5 inline-flex items-center gap-1.5 transition-colors group/link"
+            title="Open in Google Maps"
+          >
+            <i data-lucide="map-pin" class="w-4 h-4 text-slate-500 group-hover/link:text-amber-500 transition-colors"></i>
+            <span class="underline decoration-slate-700 group-hover/link:decoration-amber-400">${address}</span>
+            <i data-lucide="external-link" class="w-3.5 h-3.5 opacity-50 group-hover/link:opacity-100 transition-opacity"></i>
+          </a>
+        </div>
+        <div class="bg-slate-950/80 border border-slate-800 px-6 py-4 rounded-xl text-center min-w-[140px]">
+          <span class="block text-[10px] text-slate-500 uppercase font-extrabold tracking-wider">Eindscore</span>
+          <span class="text-3xl font-black text-amber-400">${percentText}</span>
+          <span class="block text-[10px] text-slate-400 mt-0.5">${stats.totalPoints.toFixed(1)} / ${stats.totalMax} ptn</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Practical Details Fiche -->
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+      <!-- Plaats -->
+      <div class="bg-slate-900/50 border border-slate-800/80 rounded-xl p-4 flex items-center gap-4">
+        <div class="p-3 bg-amber-500/10 text-amber-400 rounded-lg">
+          <i data-lucide="map" class="w-5 h-5"></i>
+        </div>
+        <div>
+          <span class="block text-[10px] text-slate-500 uppercase font-bold tracking-wider">Locatie in café</span>
+          <span class="text-sm font-bold text-white">${cafe.seating || "Onbekend"}</span>
+        </div>
+      </div>
+      <!-- Prijs Pils -->
+      <div class="bg-slate-900/50 border border-slate-800/80 rounded-xl p-4 flex items-center gap-4">
+        <div class="p-3 bg-emerald-500/10 text-emerald-400 rounded-lg">
+          <i data-lucide="beer" class="w-5 h-5"></i>
+        </div>
+        <div>
+          <span class="block text-[10px] text-slate-500 uppercase font-bold tracking-wider">Prijs Pils</span>
+          <span class="text-sm font-bold text-white">${cafe.pricePils || "Onbekend"}</span>
+        </div>
+      </div>
+      <!-- Prijs Picon -->
+      ${piconFiche}
+    </div>
+
+    ${reportBlock}
+
+    <!-- Score Categories Grid -->
+    <h2 class="text-xs font-bold uppercase tracking-wider text-slate-500 mb-4">
+      Gemiddelde scores per categorie
+    </h2>
+    <div class="grid grid-cols-2 md:grid-cols-6 gap-4 mb-8">
+      ${categoriesGrid}
+    </div>
+
+    <!-- Detailed Score Table -->
+    <div class="bg-slate-900/30 border border-slate-800/80 rounded-2xl overflow-hidden mb-8">
+      <div class="p-5 border-b border-slate-800/80 flex justify-between items-center bg-slate-900/50">
+        <div>
+          <h3 class="font-bold text-white text-base">Gedetailleerde Jurybeoordeling</h3>
+          <p class="text-xs text-slate-500">Individuele scores van onze proeverij (max. ${CATEGORY_MAX} per categorie)</p>
+        </div>
+      </div>
+
+      <div class="overflow-x-auto custom-scrollbar">
+        <table class="w-full text-left text-sm border-collapse">
+          <thead>
+            <tr class="border-b border-slate-800 text-slate-400 text-xs font-bold uppercase bg-slate-950/40">
+              <th class="p-4">Persoon</th>
+              ${categoryHeaders}
+              <th class="p-4 text-right">Totaal (${stats.totalMax})</th>
+              <th class="p-4 text-right">Procent</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-800/60 text-slate-300">
+            ${judgeRows}
+          </tbody>
+          <tfoot>
+            <tr class="border-t border-slate-800 text-white font-bold bg-slate-950/60">
+              <td class="p-4">Gemiddelde</td>
+              ${categoryAverageCells}
+              <td class="p-4 text-right text-amber-400">${stats.totalPoints.toFixed(1)}</td>
+              <td class="p-4 text-right text-amber-400">${percentText}</td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+    </div>
+  `;
+
+  lucide.createIcons();
+}
+
+/**
+ * Rendert de detailpagina's van alle beoordeelde cafés
+ */
+function renderCafeDetailPages() {
+  cafesList
+    .filter((cafe) => cafe.rated)
+    .forEach((cafe) => renderCafeDetailContent(cafe));
 }
 
 /**
@@ -378,6 +728,8 @@ document.addEventListener("DOMContentLoaded", async () => {
     console.error(error);
   }
   renderCafes();
+  renderLeaderboard();
+  renderCafeDetailPages();
   lucide.createIcons();
 
   const searchInput = document.getElementById("search-input");
