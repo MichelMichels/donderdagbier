@@ -402,15 +402,25 @@
     "note": null
   },
   {
-    "name": "Stroatje zonder ende",
-    "rated": false,
-    "score": null,
+    "name": "'t Stroatje zonder Ende",
+    "rated": true,
+    "score": "80.21%",
     "location": "Waregem",
-    "visitDate": null,
-    "seating": null,
-    "pricePils": null,
-    "pricePicon": null,
-    "note": null
+    "visitDate": "01/11/2026",
+    "seating": "Binnen",
+    "pricePils": "€1.50",
+    "pricePicon": "€5.00",
+    "note": null,
+    "displayName": "'t Stroatje zonder Ende",
+    "address": "Nieuwstraat 212, 8792 Waregem",
+    "mapsQuery": "Stroatje zonder ende Nieuwstraat 212 8792 Waregem",
+    "report": "Met slechts <strong class=\"text-amber-400 font-semibold\">vier jury leden</strong> aanwezig was de bezetting dunner dan gewoonlijk, maar dat deed niets af aan de gezelligheid in het Stroatje zonder ende. Een voltreffer van een avond, al moest het gezelschap uitkijken naar de klok: het café <strong class=\"text-amber-400 font-semibold\">sluit om 21u</strong>, waardoor er nog uitgeweken moest worden naar een volgend adres om de donderdag verder te zetten. Met een uitstekende score van <strong class=\"text-emerald-400 font-semibold\">80.21%</strong> neemt het Stroatje zonder ende meteen de koppositie over!",
+    "judges": [
+      { "initials": "LV", "scores": [10, 7, 10, 11, 4, 11] },
+      { "initials": "GB", "scores": [10, 9, 11, 12, 8, 12] },
+      { "initials": "LD", "scores": [9, 9, 10, 10, 9, 11] },
+      { "initials": "SL", "scores": [10, 9, 11, 10, 8, 10] }
+    ]
   },
   {
     "name": "Geestige Put",

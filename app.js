@@ -1,6 +1,6 @@
 /**
  * Donderdagbier.be - Application Logic, Database, Roulette & Easter Eggs
- * Versie: v1.10.0
+ * Versie: v1.11.0
  */
 
 // De complete, actieve lijst van cafés (Groot-Waregem: Waregem en de deelgemeentes Beveren-Leie, Desselgem, Nieuwenhove en Sint-Eloois-Vijve)
@@ -33,13 +33,17 @@ const JUDGE_CATEGORIES = [
 const CATEGORY_MAX = 12;
 
 /**
- * Bepaalt de pagina-slug (zonder "detail-" prefix) van een beoordeeld café
+ * Bepaalt de pagina-slug (zonder "detail-" prefix) van een beoordeeld café,
+ * afgeleid van de café-naam (lowercase, accenten verwijderd, spaties/overige
+ * tekens vervangen door een koppelteken).
  */
 function getCafeSlug(cafe) {
-  const name = cafe.name.toLowerCase();
-  if (name === "de regenboog") return "de-regenboog";
-  if (name === "karekiet") return "karekiet";
-  return "de-treffer";
+  return cafe.name
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
 }
 
 /**
