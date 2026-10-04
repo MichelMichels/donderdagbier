@@ -1,6 +1,6 @@
 /**
  * Donderdagbier.be - Application Logic, Database, Roulette & Easter Eggs
- * Versie: v1.12.0
+ * Versie: v1.13.0
  */
 
 // De complete, actieve lijst van cafés (Groot-Waregem: Waregem en de deelgemeentes Beveren-Leie, Desselgem, Nieuwenhove en Sint-Eloois-Vijve)
