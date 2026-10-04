@@ -1,6 +1,7 @@
 [
   {
     "name": "Hermanos",
+    "nextVisit": false,
     "rated": false,
     "score": null,
     "location": "Waregem",
@@ -12,6 +13,7 @@
   },
   {
     "name": "'t Leeuwke",
+    "nextVisit": false,
     "rated": false,
     "score": null,
     "location": "Waregem",
@@ -23,6 +25,7 @@
   },
   {
     "name": "'t Gaverke",
+    "nextVisit": false,
     "rated": false,
     "score": null,
     "location": "Waregem",
@@ -34,6 +37,7 @@
   },
   {
     "name": "Ter Leie",
+    "nextVisit": false,
     "rated": false,
     "score": null,
     "location": "Waregem",
@@ -45,6 +49,7 @@
   },
   {
     "name": "Bowling",
+    "nextVisit": false,
     "rated": false,
     "score": null,
     "location": "Waregem",
@@ -56,6 +61,7 @@
   },
   {
     "name": "Sportcafé Waregem",
+    "nextVisit": false,
     "rated": false,
     "score": null,
     "location": "Waregem",
@@ -67,6 +73,7 @@
   },
   {
     "name": "De Treffer",
+    "nextVisit": false,
     "rated": true,
     "score": "53.57%",
     "location": "Waregem",
@@ -91,6 +98,7 @@
   },
   {
     "name": "De Regenboog",
+    "nextVisit": false,
     "rated": true,
     "score": "55.73%",
     "location": "Waregem",
@@ -116,6 +124,7 @@
   },
   {
     "name": "Bridge",
+    "nextVisit": false,
     "rated": false,
     "score": null,
     "location": "Waregem",
@@ -127,6 +136,7 @@
   },
   {
     "name": "Markt 28",
+    "nextVisit": false,
     "rated": false,
     "score": null,
     "location": "Waregem",
@@ -138,6 +148,7 @@
   },
   {
     "name": "Jootn's Corner",
+    "nextVisit": false,
     "rated": false,
     "score": null,
     "location": "Waregem",
@@ -149,6 +160,7 @@
   },
   {
     "name": "Klauwaert",
+    "nextVisit": false,
     "rated": false,
     "score": null,
     "location": "Waregem",
@@ -160,6 +172,7 @@
   },
   {
     "name": "Zabarov",
+    "nextVisit": false,
     "rated": false,
     "score": null,
     "location": "Waregem",
@@ -171,6 +184,7 @@
   },
   {
     "name": "De Knok",
+    "nextVisit": false,
     "rated": false,
     "score": null,
     "location": "Waregem",
@@ -182,6 +196,7 @@
   },
   {
     "name": "Jackie O",
+    "nextVisit": false,
     "rated": false,
     "score": null,
     "location": "Waregem",
@@ -193,6 +208,7 @@
   },
   {
     "name": "Tennis WGTC",
+    "nextVisit": false,
     "rated": false,
     "score": null,
     "location": "Waregem",
@@ -204,6 +220,7 @@
   },
   {
     "name": "Fools",
+    "nextVisit": false,
     "rated": false,
     "score": null,
     "location": "Waregem",
@@ -215,6 +232,7 @@
   },
   {
     "name": "Casa El Vid",
+    "nextVisit": false,
     "rated": false,
     "score": null,
     "location": "Waregem",
@@ -226,6 +244,7 @@
   },
   {
     "name": "Bar Caballo",
+    "nextVisit": false,
     "rated": false,
     "score": null,
     "location": "Waregem",
@@ -237,6 +256,7 @@
   },
   {
     "name": "Peirdeke",
+    "nextVisit": false,
     "rated": false,
     "score": null,
     "location": "Waregem",
@@ -248,6 +268,7 @@
   },
   {
     "name": "Cultuurcafé",
+    "nextVisit": false,
     "rated": false,
     "score": null,
     "location": "Waregem",
@@ -259,6 +280,7 @@
   },
   {
     "name": "Tuin MM (zomer)",
+    "nextVisit": false,
     "rated": false,
     "score": null,
     "location": "Waregem",
@@ -270,6 +292,7 @@
   },
   {
     "name": "Arrivée",
+    "nextVisit": false,
     "rated": false,
     "score": null,
     "location": "Waregem",
@@ -281,6 +304,7 @@
   },
   {
     "name": "Mrs Sippy",
+    "nextVisit": false,
     "rated": false,
     "score": null,
     "location": "Waregem",
@@ -292,6 +316,7 @@
   },
   {
     "name": "Den Hemel",
+    "nextVisit": false,
     "rated": false,
     "score": null,
     "location": "Waregem",
@@ -303,6 +328,7 @@
   },
   {
     "name": "Park Casier",
+    "nextVisit": false,
     "rated": false,
     "score": null,
     "location": "Waregem",
@@ -314,6 +340,7 @@
   },
   {
     "name": "Jeugdhuis",
+    "nextVisit": false,
     "rated": false,
     "score": null,
     "location": "Waregem",
@@ -325,6 +352,7 @@
   },
   {
     "name": "Karekiet",
+    "nextVisit": false,
     "rated": true,
     "score": "71.06%",
     "location": "Waregem",
@@ -348,6 +376,7 @@
   },
   {
     "name": "'t Labierint",
+    "nextVisit": false,
     "rated": false,
     "score": null,
     "location": "Waregem",
@@ -359,6 +388,7 @@
   },
   {
     "name": "Cottage",
+    "nextVisit": false,
     "rated": false,
     "score": null,
     "location": "Waregem",
@@ -370,6 +400,7 @@
   },
   {
     "name": "De Toekomst",
+    "nextVisit": false,
     "rated": false,
     "score": null,
     "location": "Waregem",
@@ -381,6 +412,7 @@
   },
   {
     "name": "'t Gaverhopke",
+    "nextVisit": false,
     "rated": false,
     "score": null,
     "location": "Waregem",
@@ -392,6 +424,7 @@
   },
   {
     "name": "'t Brouwerijtje",
+    "nextVisit": false,
     "rated": false,
     "score": null,
     "location": "Waregem",
@@ -403,6 +436,7 @@
   },
   {
     "name": "'t Stroatje zonder Ende",
+    "nextVisit": false,
     "rated": true,
     "score": "80.21%",
     "location": "Waregem",
@@ -424,6 +458,7 @@
   },
   {
     "name": "Geestige Put",
+    "nextVisit": false,
     "rated": false,
     "score": null,
     "location": "Waregem",
@@ -435,6 +470,7 @@
   },
   {
     "name": "Mes Amis",
+    "nextVisit": false,
     "rated": false,
     "score": null,
     "location": "Waregem",
@@ -446,6 +482,7 @@
   },
   {
     "name": "Enigma bar",
+    "nextVisit": false,
     "rated": false,
     "score": null,
     "location": "Waregem",
@@ -457,6 +494,7 @@
   },
   {
     "name": "De Loskaai",
+    "nextVisit": false,
     "rated": false,
     "score": null,
     "location": "Waregem",
@@ -468,6 +506,7 @@
   },
   {
     "name": "'t Fonteintje",
+    "nextVisit": false,
     "rated": false,
     "score": null,
     "location": "Waregem",
@@ -479,6 +518,7 @@
   },
   {
     "name": "De Gilde",
+    "nextVisit": false,
     "rated": false,
     "score": null,
     "location": "Waregem",
@@ -490,6 +530,7 @@
   },
   {
     "name": "Den Dries",
+    "nextVisit": false,
     "rated": false,
     "score": null,
     "location": "Waregem",
@@ -501,6 +542,7 @@
   },
   {
     "name": "Neerhof",
+    "nextVisit": false,
     "rated": false,
     "score": null,
     "location": "Waregem",
@@ -512,6 +554,7 @@
   },
   {
     "name": "Halve maan",
+    "nextVisit": false,
     "rated": false,
     "score": null,
     "location": "Waregem",

@@ -1,6 +1,6 @@
 /**
  * Donderdagbier.be - Application Logic, Database, Roulette & Easter Eggs
- * Versie: v1.11.0
+ * Versie: v1.12.0
  */
 
 // De complete, actieve lijst van cafés (Groot-Waregem: Waregem en de deelgemeentes Beveren-Leie, Desselgem, Nieuwenhove en Sint-Eloois-Vijve)
@@ -79,6 +79,49 @@ function computeScoreStats(cafe) {
 
 let currentFilter = "all";
 let searchQuery = "";
+
+/**
+ * Toont (indien aanwezig) de aankondiging van het volgende te bezoeken café.
+ * Er wordt in cafes.json op zijn hoogst één café met "nextVisit": true
+ * verwacht; is er geen enkel café aangeduid, dan blijft de banner verborgen.
+ */
+function renderNextVisitBanner() {
+  const wrapper = document.getElementById("next-visit-banner");
+  if (!wrapper) return;
+
+  const nextCafe = cafesList.find((cafe) => cafe.nextVisit);
+
+  if (!nextCafe) {
+    wrapper.classList.add("hidden");
+    wrapper.innerHTML = "";
+    return;
+  }
+
+  wrapper.classList.remove("hidden");
+  wrapper.innerHTML = `
+    <div class="bg-gradient-to-br from-amber-500/15 via-slate-900/40 to-transparent border border-amber-500/40 rounded-2xl p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div>
+        <div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-amber-500/10 text-amber-400 text-[10px] font-extrabold uppercase tracking-wider mb-2 border border-amber-500/20">
+          <i data-lucide="calendar-clock" class="w-3.5 h-3.5"></i>
+          <span>Volgende halte</span>
+        </div>
+        <h3 class="text-xl font-extrabold text-white">${nextCafe.name}</h3>
+        <p class="text-slate-400 text-xs mt-1 flex items-center gap-1">
+          <i data-lucide="map-pin" class="w-3.5 h-3.5 text-slate-500"></i>
+          ${nextCafe.location}
+        </p>
+      </div>
+      <div
+        class="inline-flex items-center gap-1.5 self-start sm:self-auto px-3 py-1.5 rounded-xl bg-amber-500/10 text-amber-400 text-xs font-extrabold"
+      >
+        <i data-lucide="sparkles" class="w-4 h-4"></i>
+        <span>Binnenkort!</span>
+      </div>
+    </div>
+  `;
+
+  lucide.createIcons();
+}
 
 /**
  * Genereert de cafékaarten op de homepage
@@ -732,6 +775,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     console.error(error);
   }
   renderCafes();
+  renderNextVisitBanner();
   renderLeaderboard();
   renderCafeDetailPages();
   lucide.createIcons();
