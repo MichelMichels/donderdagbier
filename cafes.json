@@ -162,7 +162,7 @@
     "displayName": "Markt 28",
     "address": "Markt 28, 8790 Waregem",
     "mapsQuery": "Markt 28 8790 Waregem",
-    "Report":"Een café dat vroegtijdig wilde sluiten én een Markt van Waregem waar bijzonder weinig leven in zat: de avond begon niet meteen veelbelovend. Gelukkig bracht Markt28 redding. Picon en pils konden de jury stevig bekoren en tilden de onverwachte halte naar een knappe 72,45%. Eind goed, al goed! 🍻",
+    "report": "Een café dat vroegtijdig wilde sluiten én een Markt van Waregem waar bijzonder weinig leven in zat: de avond begon niet meteen veelbelovend. Gelukkig bracht Markt28 redding. Picon en pils konden de jury stevig bekoren en tilden de onverwachte halte naar een knappe 72,45%. Eind goed, al goed! 🍻",
     "judges": [
       { "initials": "MV", "scores": [10, 10, 8, 6, 9, 10] },
       { "initials": "VV", "scores": [10, 9, 9, 8, 9, 9] },
@@ -367,7 +367,9 @@
     "address": "Stationsstraat 34, 8790 Waregem",
     "mapsQuery": "Kasteel Baron Casier (bar-bistro) Stationsstraat Waregem",
     "report":"Een bezoek dat korter duurde dan gepland! Bij aankomst in Kasteel Baron Casier (bar-bistro) bleek dat de deuren vroeger zouden sluiten. De jury kon nog één Picon proeven, maar voor een pils en de overige categorieën was er helaas onvoldoende gelegenheid om een eerlijke beoordeling te maken. Het scoreformulier bleef daardoor grotendeels leeg. Geen eindscore, wel een verhaal voor de juryboeken.",
-    "judges": []
+    "judges": [
+      { "initials": "--", "scores": [0, 0, 0, 0, 0, 0] }
+    ]
   },
   {
     "name": "Jeugdhuis",
