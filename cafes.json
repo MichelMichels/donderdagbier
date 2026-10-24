@@ -60,16 +60,30 @@
     "note": null
   },
   {
-    "name": "Sportcafé Waregem",
+    "name": "Sportkafee Waregem",
     "nextVisit": false,
-    "rated": false,
-    "score": null,
+    "rated": true,
+    "score": "71.35%",
     "location": "Waregem",
-    "visitDate": null,
-    "seating": null,
-    "pricePils": null,
-    "pricePicon": null,
-    "note": null
+    "visitDate": "22/10/2026",
+    "seating": "Terras",
+    "pricePils": "€2.50",
+    "pricePicon": "€9.00",
+    "note": "",
+    "displayName":"Sportkafee Waregem",
+    "address":"Zuiderlaan 46, 8790 Waregem",
+    "mapsQuery":"Sportkafee Zuiderlaan, Waregem",
+    "report":"Een avond met winnaars op én naast het veld! De zaalvoetbaloverwinning zorgde alvast voor een mooie start, waarna vooral de bediening indruk maakte met een stevige 10,5/12. Ook pils en Picon konden de jury duidelijk overtuigen. Jammer genoeg moest één jurylid wegens ziekte forfait geven, maar dat hield de overige juryleden niet tegen om tot een mooie eindscore van 71.35% te komen.",
+    "judges": [
+      { "initials": "MV", "scores": [10, 10, 10, 8, 9, 8] },
+      { "initials": "LD", "scores": [8, 9, 9, 7, 8, 8] },
+      { "initials": "GB", "scores": [8, 9, 11, 8, 9, 8] },
+      { "initials": "MM", "scores": [10, 10, 11, 8, 8, 8] },
+      { "initials": "GD", "scores": [9, 6, 10, 4, 2, 7] },
+      { "initials": "SL", "scores": [10, 8, 11, 9, 8, 9] },
+      { "initials": "AB", "scores": [8, 9, 11, 9, 7, 8] },
+      { "initials": "LV", "scores": [9, 9, 11, 9, 8, 8] }
+    ]
   },
   {
     "name": "De Treffer",
