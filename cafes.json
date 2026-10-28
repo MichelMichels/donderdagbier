@@ -198,7 +198,7 @@
   },
   {
     "name": "Zabarov",
-    "nextVisit": false,
+    "nextVisit": true,
     "rated": false,
     "score": null,
     "location": "Waregem",
@@ -245,31 +245,7 @@
     "note": null
   },
   {
-    "name": "Fools",
-    "nextVisit": false,
-    "rated": false,
-    "score": null,
-    "location": "Waregem",
-    "visitDate": null,
-    "seating": null,
-    "pricePils": null,
-    "pricePicon": null,
-    "note": null
-  },
-  {
     "name": "Casa El Vid",
-    "nextVisit": false,
-    "rated": false,
-    "score": null,
-    "location": "Waregem",
-    "visitDate": null,
-    "seating": null,
-    "pricePils": null,
-    "pricePicon": null,
-    "note": null
-  },
-  {
-    "name": "Bar Caballo",
     "nextVisit": false,
     "rated": false,
     "score": null,
@@ -318,18 +294,6 @@
   },
   {
     "name": "Arrivée",
-    "nextVisit": false,
-    "rated": false,
-    "score": null,
-    "location": "Waregem",
-    "visitDate": null,
-    "seating": null,
-    "pricePils": null,
-    "pricePicon": null,
-    "note": null
-  },
-  {
-    "name": "Mrs Sippy",
     "nextVisit": false,
     "rated": false,
     "score": null,
