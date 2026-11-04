@@ -198,15 +198,28 @@
   },
   {
     "name": "Zabarov",
-    "nextVisit": true,
-    "rated": false,
-    "score": null,
+    "nextVisit": false,
+    "rated": true,
+    "score": "65,48%",
     "location": "Waregem",
-    "visitDate": null,
-    "seating": null,
-    "pricePils": null,
-    "pricePicon": null,
-    "note": null
+    "visitDate": "29/10/2026",
+    "seating": "Binnen",
+    "pricePils": "€3.20",
+    "pricePicon": "€11.00",
+    "note": null,
+    "displayName": "Zabarov",
+    "address": "Zuiderlaan 31, 8790 Waregem",
+    "mapsQuery": "Zabarov Zuiderlaan, Waregem",
+    "report": "Een avond die stevig doorwoog op de portefeuille! De drank vloeide rijkelijk en vooral de cocktails werden uitvoerig getest, waardoor de rekening uiteindelijk aardig opliep. De Picon kon de jury duidelijk bekoren, maar qua gezelligheid wist de zaak minder te overtuigen, wat zich ook duidelijk weerspiegelt in de scores.",
+    "judges": [
+      { "initials": "SL", "scores": [7, 10, 9, 8, 10, 7] },
+      { "initials": "GB", "scores": [6, 10, 10, 9, 7, 7] },
+      { "initials": "VV", "scores": [9, 8, 10, 8, 7, 9] },
+      { "initials": "MV", "scores": [6, 11, 7, 4, 8, 7] },
+      { "initials": "LV", "scores": [6, 9, 10, 8, 10, 9] },
+      { "initials": "MM", "scores": [3, 10, 7, 4, 8, 6] },
+      { "initials": "LD", "scores": [6, 10, 8, 7, 8, 7] }
+    ]
   },
   {
     "name": "De Knok",
