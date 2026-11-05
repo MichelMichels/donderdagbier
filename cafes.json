@@ -138,7 +138,7 @@
   },
   {
     "name": "Bridge",
-    "nextVisit": true,
+    "nextVisit": false,
     "rated": false,
     "score": null,
     "location": "Waregem",
@@ -350,7 +350,7 @@
   },
   {
     "name": "Jeugdhuis",
-    "nextVisit": false,
+    "nextVisit": true,
     "rated": false,
     "score": null,
     "location": "Waregem",
