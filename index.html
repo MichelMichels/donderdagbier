@@ -206,14 +206,14 @@
                 id="btn-filter-rated"
                 class="filter-btn px-4 py-2 rounded-xl text-xs font-bold transition-all bg-slate-900 text-slate-400 hover:bg-slate-800"
               >
-                Beoordeeld (8)
+                Beoordeeld (9)
               </button>
               <button
                 onclick="filterCafes('unrated')"
                 id="btn-filter-unrated"
                 class="filter-btn px-4 py-2 rounded-xl text-xs font-bold transition-all bg-slate-900 text-slate-400 hover:bg-slate-800"
               >
-                Nog te bezoeken (32)
+                Nog te bezoeken (31)
               </button>
             </div>
             <!-- Search -->
@@ -407,6 +407,27 @@
 
         <!-- Inhoud wordt dynamisch gegenereerd door renderCafeDetailContent() in app.js -->
         <div id="detail-content-zabarov"></div>
+      </div>
+
+      <!-- ================= DETAIL PAGE: Jeugdhuis ================= -->
+      <div
+        id="page-detail-jeugdhuis"
+        class="page-view hidden max-w-4xl mx-auto px-4 py-8"
+      >
+        <!-- Back button -->
+        <button
+          onclick="showPage('overview')"
+          class="inline-flex items-center gap-2 text-sm text-slate-400 hover:text-amber-400 transition-colors mb-6 group"
+        >
+          <i
+            data-lucide="arrow-left"
+            class="w-4 h-4 group-hover:-translate-x-1 transition-transform"
+          ></i>
+          <span>Terug naar overzicht</span>
+        </button>
+
+        <!-- Inhoud wordt dynamisch gegenereerd door renderCafeDetailContent() in app.js -->
+        <div id="detail-content-jeugdhuis"></div>
       </div>
     </main>
 

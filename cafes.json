@@ -350,15 +350,26 @@
   },
   {
     "name": "Jeugdhuis",
-    "nextVisit": true,
-    "rated": false,
-    "score": null,
+    "nextVisit": false,
+    "rated": true,
+    "score": "77.00%",
     "location": "Waregem",
-    "visitDate": null,
-    "seating": null,
-    "pricePils": null,
-    "pricePicon": null,
-    "note": null
+    "visitDate": "05/11/2026",
+    "seating": "Binnen",
+    "pricePils": "€2.00",
+    "pricePicon": "/",
+    "note": null,
+    "displayName": "Jeugdhuis Den Uitvlucht",
+    "address": "Noorderlaan 32, 8790 Waregem",
+    "mapsQuery": "Jeugdhuis Den Uitvlucht Noorderlaan 32 8790 Waregem",
+    "report": "Een nieuwe locatie, maar gelukkig nog steeds prijzen waar de jury blij van wordt. Picon was er helaas niet, waardoor iedereen noodgedwongen een 0 moest noteren in die categorie. Vooral de lage prijzen maken deze nieuwe stek een aangename plaats voor wie graag iets drinkt zonder achteraf van de rekening te moeten bekomen.",
+    "judges": [
+      { "initials": "MV", "scores": [10, 0, 10, 10, 11, 8] },
+      { "initials": "LD", "scores": [8, 0, 9, 9, 10, 9] },
+      { "initials": "VV", "scores": [8, 0, 9, 8, 10, 9] },
+      { "initials": "LV", "scores": [10, 0, 9, 8, 9, 8] },
+      { "initials": "SL", "scores": [10, 0, 10, 8, 11, 10] }
+    ]
   },
   {
     "name": "Karekiet",
