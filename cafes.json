@@ -235,7 +235,7 @@
   },
   {
     "name": "Jackie O",
-    "nextVisit": false,
+    "nextVisit": true,
     "rated": false,
     "score": null,
     "location": "Waregem",
@@ -503,18 +503,6 @@
   },
   {
     "name": "Enigma bar",
-    "nextVisit": false,
-    "rated": false,
-    "score": null,
-    "location": "Waregem",
-    "visitDate": null,
-    "seating": null,
-    "pricePils": null,
-    "pricePicon": null,
-    "note": null
-  },
-  {
-    "name": "De Loskaai",
     "nextVisit": false,
     "rated": false,
     "score": null,
