@@ -223,7 +223,7 @@
   },
   {
     "name": "De Knok",
-    "nextVisit": false,
+    "nextVisit": true,
     "rated": false,
     "score": null,
     "location": "Waregem",
