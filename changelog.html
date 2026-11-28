@@ -125,10 +125,53 @@
         <div
           class="relative border-l-2 border-slate-800 ml-3 pl-6 space-y-10 py-4"
         >
-          <!-- v1.14.0 -->
+          <!-- v1.15.0 -->
           <div class="relative">
             <span
               class="absolute -left-[31px] top-1.5 bg-amber-500 text-dark-900 rounded-full p-1 border-4 border-dark-950"
+            >
+              <i data-lucide="git-commit" class="w-3 h-3"></i>
+            </span>
+            <div class="flex flex-wrap items-center gap-2 mb-1">
+              <span class="text-white font-extrabold text-lg"
+                >Versie 1.15.0</span
+              >
+              <span
+                class="text-xs bg-slate-900 border border-slate-800 text-slate-400 px-2 py-0.5 rounded font-mono"
+                >28/11/2026</span
+              >
+            </div>
+            <p class="text-slate-300 text-sm font-semibold mb-2">
+              Kaartweergave
+            </p>
+            <ul
+              class="list-disc list-inside text-slate-400 text-xs space-y-1 pl-1"
+            >
+              <li>
+                <strong>Lijst of kaart</strong>: Met de nieuwe schakelaar naast
+                het zoekveld toon je het caféoverzicht op een kaart van
+                Groot-Waregem. Filters en zoeken werken ook op de kaart.
+              </li>
+              <li>
+                <strong>Markers per status</strong>: Beoordeelde cafés zijn
+                amber, nog te bezoeken cafés grijs en de volgende halte groen.
+                Klik op een beoordeeld café om de score te zien en meteen naar
+                het rapport te gaan.
+              </li>
+              <li>
+                <strong>Coördinaten</strong>: Elk café in
+                <code>cafes.json</code> heeft nu <code>lat</code> en
+                <code>lng</code>, opgezocht via OpenStreetMap. Cafés zonder
+                coördinaten staan enkel in de lijst; onder de kaart staat
+                hoeveel er nog ontbreken.
+              </li>
+            </ul>
+          </div>
+
+          <!-- v1.14.0 -->
+          <div class="relative">
+            <span
+              class="absolute -left-[31px] top-1.5 bg-slate-800 text-slate-400 rounded-full p-1 border-4 border-dark-950"
             >
               <i data-lucide="git-commit" class="w-3 h-3"></i>
             </span>
@@ -600,7 +643,7 @@
           <span
             class="text-[10px] bg-slate-900 border border-slate-800 px-2 py-0.5 rounded text-slate-400 font-mono"
           >
-            v1.14.0
+            v1.15.0
           </span>
         </div>
         <p class="text-center md:text-right">

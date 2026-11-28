@@ -1,6 +1,6 @@
 /**
  * Donderdagbier.be - Application Logic, Database, Roulette & Easter Eggs
- * Versie: v1.14.0
+ * Versie: v1.15.0
  */
 
 // De complete, actieve lijst van cafés (Groot-Waregem: Waregem en de deelgemeentes Beveren-Leie, Desselgem, Nieuwenhove en Sint-Eloois-Vijve)
@@ -124,6 +124,166 @@ function renderNextVisitBanner() {
 }
 
 /**
+ * Geeft de cafés terug die voldoen aan de actieve filter en zoekterm.
+ * Wordt gedeeld door de lijst- en de kaartweergave.
+ */
+function getFilteredCafes() {
+  const query = searchQuery.toLowerCase();
+  return cafesList.filter((cafe) => {
+    const matchesSearch = cafe.name.toLowerCase().includes(query);
+    if (currentFilter === "rated") {
+      return matchesSearch && cafe.rated;
+    } else if (currentFilter === "unrated") {
+      return matchesSearch && !cafe.rated;
+    }
+    return matchesSearch;
+  });
+}
+
+// ================= KAARTWEERGAVE =================
+// De coördinaten (lat/lng) staan in cafes.json. Cafés zonder coördinaten
+// verschijnen enkel in de lijst; onder de kaart staat hoeveel er ontbreken.
+
+let currentView = "list";
+let cafeMap = null;
+let cafeMarkerLayer = null;
+const MAP_DEFAULT_CENTER = [50.8865, 3.4155]; // Groot-Waregem
+const MAP_DEFAULT_ZOOM = 13;
+
+function hasCoordinates(cafe) {
+  return Number.isFinite(cafe.lat) && Number.isFinite(cafe.lng);
+}
+
+/**
+ * Schakelt tussen de lijst- en de kaartweergave van het caféoverzicht
+ */
+function setCafeView(view) {
+  currentView = view;
+  const grid = document.getElementById("cafes-grid");
+  const mapWrapper = document.getElementById("cafes-map-wrapper");
+  if (!grid || !mapWrapper) return;
+
+  grid.classList.toggle("hidden", view !== "list");
+  mapWrapper.classList.toggle("hidden", view !== "map");
+
+  document.querySelectorAll(".view-btn").forEach((btn) => {
+    const active = btn.id === `btn-view-${view}`;
+    btn.setAttribute("aria-pressed", String(active));
+    btn.classList.toggle("bg-amber-500", active);
+    btn.classList.toggle("text-dark-900", active);
+    btn.classList.toggle("text-slate-400", !active);
+    btn.classList.toggle("hover:text-slate-200", !active);
+  });
+
+  if (view === "map") {
+    renderCafeMap();
+  }
+}
+
+function initCafeMap() {
+  if (cafeMap || typeof L === "undefined") return;
+  const container = document.getElementById("cafes-map");
+  if (!container) return;
+
+  cafeMap = L.map(container, {
+    center: MAP_DEFAULT_CENTER,
+    zoom: MAP_DEFAULT_ZOOM,
+    scrollWheelZoom: false,
+  });
+
+  // Standaard OpenStreetMap-tegels; de donkere look komt uit een CSS-filter in styles.css
+  L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
+    maxZoom: 19,
+    attribution:
+      '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>-bijdragers',
+  }).addTo(cafeMap);
+
+  cafeMarkerLayer = L.layerGroup().addTo(cafeMap);
+
+  // Scrollen zoomt pas na een klik op de kaart, zodat de pagina vlot blijft scrollen
+  cafeMap.on("click", () => cafeMap.scrollWheelZoom.enable());
+  cafeMap.on("mouseout", () => cafeMap.scrollWheelZoom.disable());
+}
+
+function cafeMarkerStyle(cafe) {
+  if (cafe.nextVisit) {
+    return { radius: 10, color: "#6ee7b7", weight: 3, fillColor: "#34d399", fillOpacity: 0.95 };
+  }
+  if (cafe.rated) {
+    return { radius: 8, color: "#fde68a", weight: 2, fillColor: "#f59e0b", fillOpacity: 0.95 };
+  }
+  return { radius: 6, color: "#cbd5e1", weight: 1.5, fillColor: "#64748b", fillOpacity: 0.85 };
+}
+
+function cafePopupHtml(cafe) {
+  const name = escapeHtml(cafe.displayName || cafe.name);
+  const address = cafe.address ? `<div class="map-popup-meta">${escapeHtml(cafe.address)}</div>` : "";
+
+  if (cafe.rated) {
+    const stats = computeScoreStats(cafe);
+    const scoreText = stats ? `${stats.percent.toFixed(2)}%` : cafe.score || "–";
+    const slug = getCafeSlug(cafe);
+    return `
+      <div class="map-popup-title">${name}</div>
+      ${address}
+      <div class="map-popup-score">★ ${escapeHtml(scoreText)}</div>
+      <div class="map-popup-meta">Bezocht op ${escapeHtml(cafe.visitDate || "–")}</div>
+      <button type="button" class="map-popup-link" onclick="showPage('detail-${slug}')">Bekijk rapport →</button>
+    `;
+  }
+
+  const status = cafe.nextVisit ? "Volgende halte" : "Nog te bezoeken";
+  return `
+    <div class="map-popup-title">${name}</div>
+    ${address}
+    <div class="map-popup-meta">${status}</div>
+  `;
+}
+
+/**
+ * Tekent de markers voor de gefilterde cafés op de kaart
+ */
+function renderCafeMap() {
+  if (currentView !== "map") return;
+  initCafeMap();
+  if (!cafeMap) return;
+
+  // De kaart kan in een verborgen container aangemaakt zijn: afmetingen opnieuw meten
+  cafeMap.invalidateSize();
+  cafeMarkerLayer.clearLayers();
+
+  const filtered = getFilteredCafes();
+  const located = filtered.filter(hasCoordinates);
+  // Volgende halte bovenaan tekenen, beoordeelde cafés boven de nog te bezoeken
+  const order = (cafe) => (cafe.nextVisit ? 2 : cafe.rated ? 1 : 0);
+  located
+    .slice()
+    .sort((a, b) => order(a) - order(b))
+    .forEach((cafe) => {
+      L.circleMarker([cafe.lat, cafe.lng], cafeMarkerStyle(cafe))
+        .bindTooltip(escapeHtml(cafe.name), { direction: "top", offset: [0, -6] })
+        .bindPopup(cafePopupHtml(cafe), { className: "map-popup" })
+        .addTo(cafeMarkerLayer);
+    });
+
+  if (located.length > 0) {
+    cafeMap.fitBounds(
+      L.latLngBounds(located.map((cafe) => [cafe.lat, cafe.lng])),
+      { padding: [40, 40], maxZoom: 16 },
+    );
+  }
+
+  const missing = filtered.length - located.length;
+  const missingLabel = document.getElementById("cafes-map-missing");
+  if (missingLabel) {
+    missingLabel.textContent =
+      missing === 0
+        ? ""
+        : `${missing} ${missing === 1 ? "café staat" : "cafés staan"} (nog) niet op de kaart`;
+  }
+}
+
+/**
  * Genereert de cafékaarten op de homepage
  */
 function renderCafes() {
@@ -132,19 +292,7 @@ function renderCafes() {
 
   grid.innerHTML = "";
 
-  const filtered = cafesList.filter((cafe) => {
-    const matchesSearch = cafe.name
-      .toLowerCase()
-      .includes(searchQuery.toLowerCase());
-    if (currentFilter === "rated") {
-      return matchesSearch && cafe.rated;
-    } else if (currentFilter === "unrated") {
-      return matchesSearch && !cafe.rated;
-    }
-    return matchesSearch;
-  });
-
-  filtered.forEach((cafe) => {
+  getFilteredCafes().forEach((cafe) => {
     const card = document.createElement("div");
 
     if (cafe.rated) {
@@ -224,6 +372,7 @@ function renderCafes() {
   });
 
   lucide.createIcons();
+  renderCafeMap();
 }
 
 /**
@@ -1485,6 +1634,10 @@ function showPage(pageId) {
   const targetPage = document.getElementById(`page-${pageId}`);
   if (targetPage) {
     targetPage.classList.remove("hidden");
+  }
+  if (pageId === "overview" && cafeMap) {
+    cafeMap.closePopup();
+    cafeMap.invalidateSize();
   }
   window.scrollTo({ top: 0, behavior: "smooth" });
 }
