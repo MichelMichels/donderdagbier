@@ -1,0 +1,283 @@
+<!doctype html>
+<html lang="nl-BE">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Rapporten | Donderdagbier.be</title>
+    <link rel="icon" type="image/x-icon" href="favicon.ico" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              amber: {
+                50: "#fdf8ee",
+                100: "#fbf0d5",
+                400: "#fbbf24",
+                500: "#f59e0b",
+                600: "#d97706",
+                900: "#78350f",
+              },
+              dark: {
+                950: "#090d16",
+                900: "#0f172a",
+                800: "#1e293b",
+                700: "#334155",
+              },
+            },
+            fontFamily: {
+              sans: ["Plus Jakarta Sans", "sans-serif"],
+            },
+          },
+        },
+      };
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+    <script src="https://unpkg.com/lucide@latest"></script>
+  </head>
+  <body
+    class="bg-dark-950 text-slate-100 min-h-screen flex flex-col antialiased selection:bg-amber-500 selection:text-dark-900"
+  >
+    <header
+      class="border-b border-slate-800/80 bg-dark-950/90 backdrop-blur sticky top-0 z-50"
+    >
+      <div
+        class="max-w-5xl mx-auto px-4 py-4 flex items-center justify-between"
+      >
+        <a href="index.html" class="flex items-center gap-2">
+          <span class="p-2 bg-amber-500 rounded-xl text-dark-900">
+            <i data-lucide="beer" class="w-6 h-6 stroke-[2.5]"></i>
+          </span>
+          <span class="text-left">
+            <span
+              class="text-xl font-extrabold tracking-tight bg-gradient-to-r from-amber-400 to-amber-600 bg-clip-text text-transparent block"
+            >
+              donderdagbier<span class="text-slate-400">.be</span>
+            </span>
+            <span
+              class="text-[10px] text-slate-500 uppercase tracking-wider font-bold block"
+              >Groot-Waregemse Caféwijzer</span
+            >
+          </span>
+        </a>
+        <span
+          class="hidden sm:inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-amber-500/10 text-amber-400 border border-amber-500/20"
+        >
+          <span class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span>
+          Huidig seizoen 2026
+        </span>
+      </div>
+    </header>
+
+    <main class="flex-grow w-full max-w-5xl mx-auto px-4 py-8">
+      <a
+        href="index.html"
+        class="inline-flex items-center gap-2 text-sm text-slate-400 hover:text-amber-400 transition-colors mb-6 group"
+      >
+        <i
+          data-lucide="arrow-left"
+          class="w-4 h-4 group-hover:-translate-x-1 transition-transform"
+        ></i>
+        <span>Terug naar overzicht</span>
+      </a>
+
+      <section id="cafe-analytics" aria-labelledby="analytics-title">
+        <div class="mb-5">
+          <span
+            class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-amber-500/10 text-amber-400 text-[10px] font-bold uppercase tracking-wider mb-2 border border-amber-500/20"
+          >
+            <i data-lucide="chart-no-axes-combined" class="w-3.5 h-3.5"></i>
+            Seizoensrapport
+          </span>
+          <h1
+            id="analytics-title"
+            class="text-2xl md:text-3xl font-black text-white"
+          >
+            Caférapporten &amp; scores
+          </h1>
+          <p class="text-slate-400 text-sm mt-2">
+            Een overzicht van scores, prijzen en juryresultaten van dit seizoen.
+          </p>
+        </div>
+
+        <div
+          id="cafe-analytics-summary"
+          class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-4"
+        ></div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4">
+          <figure
+            class="bg-slate-900/50 border border-slate-800 rounded-2xl p-4 sm:p-5"
+          >
+            <figcaption class="mb-4">
+              <h2 class="text-sm font-bold text-white">Verdeling pilsprijs</h2>
+              <p class="text-[11px] text-slate-500 mt-1">
+                Eén stip per café; beweeg over een stip voor de naam
+              </p>
+            </figcaption>
+            <div id="cafe-pils-price-chart"></div>
+          </figure>
+
+          <figure
+            class="bg-slate-900/50 border border-slate-800 rounded-2xl p-4 sm:p-5"
+          >
+            <figcaption class="mb-4">
+              <h2 class="text-sm font-bold text-white">Verdeling piconprijs</h2>
+              <p class="text-[11px] text-slate-500 mt-1">
+                Eén stip per café; beweeg over een stip voor de naam
+              </p>
+            </figcaption>
+            <div id="cafe-picon-price-chart"></div>
+          </figure>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          <figure
+            class="bg-slate-900/50 border border-slate-800 rounded-2xl p-4 sm:p-5"
+          >
+            <figcaption class="mb-4">
+              <h2 class="text-sm font-bold text-white">Scores per café</h2>
+              <p class="text-[11px] text-slate-500 mt-1">
+                Gemiddelde totaalscore, van hoog naar laag
+              </p>
+            </figcaption>
+            <div id="cafe-score-chart"></div>
+          </figure>
+
+          <figure
+            class="bg-slate-900/50 border border-slate-800 rounded-2xl p-4 sm:p-5"
+          >
+            <figcaption class="mb-4">
+              <h2 class="text-sm font-bold text-white">
+                Gemiddelde per jurycategorie
+              </h2>
+              <p class="text-[11px] text-slate-500 mt-1">
+                Gemiddelde score op 12 over cafés met een jury-score
+              </p>
+            </figcaption>
+            <div id="cafe-category-chart"></div>
+          </figure>
+
+          <figure
+            class="bg-slate-900/50 border border-slate-800 rounded-2xl p-4 sm:p-5 lg:col-span-2"
+          >
+            <figcaption class="mb-4">
+              <h2 class="text-sm font-bold text-white">Aanwezigheid jury</h2>
+              <p class="text-[11px] text-slate-500 mt-1">
+                Aantal beoordeelde cafés per jurylid, met het meest en minst
+                aanwezige jurylid gemarkeerd
+              </p>
+            </figcaption>
+            <div id="cafe-judge-attendance-chart"></div>
+          </figure>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-4">
+          <figure
+            class="bg-slate-900/50 border border-slate-800 rounded-2xl p-4 sm:p-5"
+          >
+            <figcaption class="mb-4">
+              <h2 class="text-sm font-bold text-white">Prijs vs. score</h2>
+              <p class="text-[11px] text-slate-500 mt-1">
+                Pilsprijs tegenover jury-score; linksboven is goedkoop én goed
+              </p>
+            </figcaption>
+            <div id="cafe-value-chart"></div>
+          </figure>
+
+          <figure
+            class="bg-slate-900/50 border border-slate-800 rounded-2xl p-4 sm:p-5"
+          >
+            <figcaption class="mb-4">
+              <h2 class="text-sm font-bold text-white">Seizoensverloop</h2>
+              <p class="text-[11px] text-slate-500 mt-1">
+                Score per bezoek in volgorde van bezoekdatum, met lopend
+                gemiddelde
+              </p>
+            </figcaption>
+            <div id="cafe-timeline-chart"></div>
+          </figure>
+
+          <figure
+            class="bg-slate-900/50 border border-slate-800 rounded-2xl p-4 sm:p-5 lg:col-span-2"
+          >
+            <figcaption class="mb-4">
+              <h2 class="text-sm font-bold text-white">
+                Sterktes en zwaktes per café
+              </h2>
+              <p class="text-[11px] text-slate-500 mt-1">
+                Gemiddelde jury-score per categorie; groen is sterk, rood is
+                zwak
+              </p>
+            </figcaption>
+            <div id="cafe-category-heatmap"></div>
+          </figure>
+
+          <figure
+            class="bg-slate-900/50 border border-slate-800 rounded-2xl p-4 sm:p-5"
+          >
+            <figcaption class="mb-4">
+              <h2 class="text-sm font-bold text-white">Jury-eensgezindheid</h2>
+              <p class="text-[11px] text-slate-500 mt-1">
+                Spreiding van de jury-scores per café; één stip per jurylid
+              </p>
+            </figcaption>
+            <div id="cafe-consensus-chart"></div>
+          </figure>
+
+          <figure
+            class="bg-slate-900/50 border border-slate-800 rounded-2xl p-4 sm:p-5"
+          >
+            <figcaption class="mb-4">
+              <h2 class="text-sm font-bold text-white">Seizoensvoortgang</h2>
+              <p class="text-[11px] text-slate-500 mt-1">
+                Bezochte cafés, bezoeken per maand en verwachte einddatum
+              </p>
+            </figcaption>
+            <div id="cafe-progress-chart"></div>
+          </figure>
+
+          <figure
+            class="bg-slate-900/50 border border-slate-800 rounded-2xl p-4 sm:p-5 lg:col-span-2"
+          >
+            <figcaption class="mb-4">
+              <h2 class="text-sm font-bold text-white">Juryprofiel</h2>
+              <p class="text-[11px] text-slate-500 mt-1">
+                Gemiddelde score per categorie per jurylid
+              </p>
+            </figcaption>
+            <div id="cafe-judge-profile"></div>
+          </figure>
+        </div>
+      </section>
+    </main>
+
+    <footer
+      class="border-t border-slate-900 bg-slate-950/80 py-8 text-slate-500 text-xs"
+    >
+      <div
+        class="max-w-5xl mx-auto px-4 flex flex-col md:flex-row items-center justify-between gap-4"
+      >
+        <div class="flex items-center gap-2">
+          <span class="p-1.5 bg-slate-900 rounded-lg text-amber-500">
+            <i data-lucide="beer" class="w-4 h-4"></i>
+          </span>
+          <span class="font-bold text-slate-300">donderdagbier.be</span>
+        </div>
+        <p class="text-center md:text-right">
+          &copy; 2026 donderdagbier.be. Alle rechten voorbehouden. Wij promoten
+          verantwoord alcoholgebruik. Schol!
+        </p>
+      </div>
+    </footer>
+
+    <script src="app.js" defer></script>
+  </body>
+</html>

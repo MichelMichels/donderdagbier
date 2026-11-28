@@ -1,6 +1,6 @@
 /**
  * Donderdagbier.be - Application Logic, Database, Roulette & Easter Eggs
- * Versie: v1.13.0
+ * Versie: v1.14.0
  */
 
 // De complete, actieve lijst van cafés (Groot-Waregem: Waregem en de deelgemeentes Beveren-Leie, Desselgem, Nieuwenhove en Sint-Eloois-Vijve)
@@ -311,6 +311,926 @@ function renderLeaderboard() {
     .join("");
 
   lucide.createIcons();
+}
+
+function escapeHtml(value) {
+  const entities = {
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    '"': "&quot;",
+    "'": "&#39;",
+  };
+  return String(value).replace(/[&<>"']/g, (character) => entities[character]);
+}
+
+function parseCafePrice(value) {
+  if (typeof value !== "string") return null;
+  const match = value.match(/^\s*€\s*(\d+(?:[.,]\d{1,2})?)\s*$/);
+  if (!match) return null;
+
+  const price = Number(match[1].replace(",", "."));
+  return Number.isFinite(price) ? price : null;
+}
+
+function formatEuro(price) {
+  return `€${price.toFixed(2).replace(".", ",")}`;
+}
+
+/**
+ * Rendert een gestapelde dotplot: één stip per café op de prijs-as; cafés met
+ * dezelfde prijs worden boven elkaar gestapeld.
+ */
+function renderPriceDotPlot(container, chartId, title, observations, color) {
+  if (!container) return;
+  if (!observations.length) {
+    container.innerHTML =
+      '<p class="text-xs text-slate-500">Er zijn nog geen prijsgegevens beschikbaar.</p>';
+    return;
+  }
+
+  const sorted = observations.map((entry) => entry.price).sort((a, b) => a - b);
+  const middle = Math.floor(sorted.length / 2);
+  const median =
+    sorted.length % 2
+      ? sorted[middle]
+      : (sorted[middle - 1] + sorted[middle]) / 2;
+  const mean = sorted.reduce((sum, price) => sum + price, 0) / sorted.length;
+  const minPrice = sorted[0];
+  const maxPrice = sorted[sorted.length - 1];
+
+  const step = maxPrice - minPrice <= 3 ? 0.5 : 1;
+  let axisMin = Math.floor(minPrice / step) * step;
+  let axisMax = Math.ceil(maxPrice / step) * step;
+  if (axisMin === minPrice) axisMin = Math.max(0, axisMin - step);
+  if (axisMax === maxPrice) axisMax += step;
+
+  const groups = new Map();
+  observations
+    .slice()
+    .sort((a, b) => a.name.localeCompare(b.name))
+    .forEach((entry) => {
+      const key = Math.round(entry.price * 100);
+      if (!groups.has(key)) groups.set(key, []);
+      groups.get(key).push(entry);
+    });
+  const maxStack = Math.max(...Array.from(groups.values(), (g) => g.length));
+
+  const dotRadius = 8;
+  const dotSpacing = dotRadius * 2 + 4;
+  const chartWidth = 640;
+  const padding = { top: 16, right: 24, bottom: 34, left: 24 };
+  const plotHeight = Math.max(80, maxStack * dotSpacing + 8);
+  const chartHeight = padding.top + plotHeight + padding.bottom;
+  const plotWidth = chartWidth - padding.left - padding.right;
+  const baseline = padding.top + plotHeight;
+  const x = (price) =>
+    padding.left + ((price - axisMin) / (axisMax - axisMin)) * plotWidth;
+
+  const ticks = [];
+  for (let tick = axisMin; tick <= axisMax + 1e-9; tick += step) {
+    ticks.push(tick);
+  }
+  const axis = ticks
+    .map(
+      (tick) => `
+        <line x1="${x(tick)}" y1="${padding.top}" x2="${x(tick)}" y2="${baseline}" stroke="#1e293b" />
+        <text x="${x(tick)}" y="${baseline + 22}" text-anchor="middle" fill="#64748b" font-size="13">${formatEuro(tick)}</text>
+      `,
+    )
+    .join("");
+
+  const dots = Array.from(groups.values())
+    .map((group) =>
+      group
+        .map((entry, index) => {
+          const cy = baseline - dotRadius - 4 - index * dotSpacing;
+          return `
+            <circle cx="${x(entry.price)}" cy="${cy}" r="${dotRadius}" fill="${color}" fill-opacity="0.9" stroke="#0f172a" stroke-width="2">
+              <title>${escapeHtml(entry.name)}: ${formatEuro(entry.price)}</title>
+            </circle>
+          `;
+        })
+        .join(""),
+    )
+    .join("");
+
+  const referenceLine = (value, dashed) => `
+    <line x1="${x(value)}" y1="${padding.top - 8}" x2="${x(value)}" y2="${baseline}" stroke="#e2e8f0" stroke-width="1.5" ${dashed ? 'stroke-dasharray="5 4"' : ""} />
+  `;
+
+  const description = observations
+    .slice()
+    .sort((a, b) => a.price - b.price || a.name.localeCompare(b.name))
+    .map((entry) => `${escapeHtml(entry.name)}: ${formatEuro(entry.price)}`)
+    .join(", ");
+
+  container.innerHTML = `
+    <svg
+      class="w-full h-auto"
+      viewBox="0 0 ${chartWidth} ${chartHeight}"
+      role="img"
+      aria-labelledby="${chartId}-title ${chartId}-desc"
+    >
+      <title id="${chartId}-title">Verdeling ${escapeHtml(title.toLowerCase())}</title>
+      <desc id="${chartId}-desc">${description}</desc>
+      <g aria-hidden="true">
+        ${axis}
+        <line x1="${padding.left}" y1="${baseline}" x2="${chartWidth - padding.right}" y2="${baseline}" stroke="#334155" />
+        ${referenceLine(median, false)}
+        ${referenceLine(mean, true)}
+        ${dots}
+      </g>
+    </svg>
+    <div class="flex flex-wrap items-center gap-x-4 gap-y-1 mt-3 text-[11px] text-slate-400">
+      <span class="inline-flex items-center gap-1.5"><span class="inline-block w-4 border-t-2 border-slate-200"></span>Mediaan ${formatEuro(median)}</span>
+      <span class="inline-flex items-center gap-1.5"><span class="inline-block w-4 border-t-2 border-dashed border-slate-200"></span>Gemiddelde ${formatEuro(mean)}</span>
+      <span>Bereik ${formatEuro(minPrice)} – ${formatEuro(maxPrice)}</span>
+    </div>
+  `;
+}
+
+/**
+ * Genereert kerncijfers en scoregrafieken op basis van de cafébeoordelingen
+ */
+const EMPTY_SCORE_MESSAGE =
+  '<p class="text-xs text-slate-500">Er zijn nog geen jurybeoordelingen beschikbaar.</p>';
+
+function parseCafeVisitDate(value) {
+  const match = String(value || "").match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+  if (!match) return null;
+  const [, day, month, year] = match.map(Number);
+  const date = new Date(year, month - 1, day);
+  return date.getMonth() === month - 1 ? date : null;
+}
+
+function getValidJudges(cafe) {
+  return (cafe.judges || []).filter((judge) => {
+    const initials = String(judge.initials || "").trim();
+    return initials && initials !== "--" && Array.isArray(judge.scores);
+  });
+}
+
+function heatColor(value, max) {
+  const ratio = Math.max(0, Math.min(1, value / max));
+  return `hsl(${Math.round(ratio * 130)} 65% 30%)`;
+}
+
+function standardDeviation(values) {
+  const mean = values.reduce((sum, value) => sum + value, 0) / values.length;
+  return Math.sqrt(
+    values.reduce((sum, value) => sum + (value - mean) ** 2, 0) / values.length,
+  );
+}
+
+// Asbereik afgerond op `step`, met minstens één stap marge rond de data
+function paddedRange(values, step, floor = -Infinity, ceiling = Infinity) {
+  const min = Math.min(...values);
+  const max = Math.max(...values);
+  let low = Math.floor(min / step) * step;
+  let high = Math.ceil(max / step) * step;
+  if (low === min) low -= step;
+  if (high === max) high += step;
+  return [Math.max(floor, low), Math.min(ceiling, high)];
+}
+
+function heatLegend() {
+  return `
+    <div class="flex items-center gap-2 mt-3 text-[10px] text-slate-500">
+      <span>0</span>
+      <span class="h-2 w-32 rounded-full" style="background: linear-gradient(to right, ${heatColor(0, 1)}, ${heatColor(0.5, 1)}, ${heatColor(1, 1)})"></span>
+      <span>${CATEGORY_MAX}</span>
+    </div>
+  `;
+}
+
+function renderHeatTable(container, firstHeader, extraHeader, lastHeader, rows, footer) {
+  const cell = (value, title) => `
+    <td class="p-0.5">
+      <div class="rounded-md px-2 py-1.5 text-center font-bold text-white" style="background: ${heatColor(value, CATEGORY_MAX)}" title="${escapeHtml(title)}">${value.toFixed(1)}</div>
+    </td>
+  `;
+  const renderRow = (row, isFooter = false) => `
+    <tr class="${isFooter ? "border-t border-slate-700" : ""}">
+      <th scope="row" class="p-1.5 pr-3 text-left font-semibold ${isFooter ? "text-slate-400" : "text-slate-200"} whitespace-nowrap max-w-[12rem] truncate" title="${escapeHtml(row.label)}">${escapeHtml(row.label)}</th>
+      ${extraHeader ? `<td class="p-1.5 text-center text-slate-400">${escapeHtml(row.extra ?? "")}</td>` : ""}
+      ${row.values.map((value, index) => cell(value, `${row.label} · ${JUDGE_CATEGORIES[index]}: ${value.toFixed(2)} / ${CATEGORY_MAX}`)).join("")}
+      <td class="p-1.5 pl-3 text-right font-bold text-amber-400 whitespace-nowrap">${escapeHtml(row.summary)}</td>
+    </tr>
+  `;
+
+  container.innerHTML = `
+    <div class="overflow-x-auto">
+      <table class="w-full min-w-[640px] table-fixed text-[11px] border-separate border-spacing-0">
+        <colgroup>
+          <col class="w-44" />
+          ${extraHeader ? '<col class="w-16" />' : ""}
+          ${JUDGE_CATEGORIES.map(() => "<col />").join("")}
+          <col class="w-20" />
+        </colgroup>
+        <thead>
+          <tr class="text-[10px] uppercase tracking-wider text-slate-500">
+            <th scope="col" class="p-1.5 text-left">${escapeHtml(firstHeader)}</th>
+            ${extraHeader ? `<th scope="col" class="p-1.5 text-center">${escapeHtml(extraHeader)}</th>` : ""}
+            ${JUDGE_CATEGORIES.map((name) => `<th scope="col" class="p-1.5 text-center">${escapeHtml(name)}</th>`).join("")}
+            <th scope="col" class="p-1.5 pl-3 text-right">${escapeHtml(lastHeader)}</th>
+          </tr>
+        </thead>
+        <tbody>${rows.map((row) => renderRow(row)).join("")}</tbody>
+        ${footer ? `<tfoot>${renderRow(footer, true)}</tfoot>` : ""}
+      </table>
+    </div>
+    ${heatLegend()}
+  `;
+}
+
+function renderValueChart(container, ratedCafes) {
+  if (!container) return;
+  const points = ratedCafes
+    .map(({ cafe, stats }) => {
+      const price = parseCafePrice(cafe.pricePils);
+      if (price === null || price <= 0) return null;
+      return {
+        name: cafe.displayName || cafe.name,
+        price,
+        percent: stats.percent,
+        value: stats.percent / price,
+      };
+    })
+    .filter(Boolean);
+  if (!points.length) {
+    container.innerHTML =
+      '<p class="text-xs text-slate-500">Er zijn nog geen cafés met zowel een score als een pilsprijs.</p>';
+    return;
+  }
+
+  const ranked = [...points].sort((a, b) => b.value - a.value);
+  const topNames = new Set(ranked.slice(0, 3).map((point) => point.name));
+  const [xMin, xMax] = paddedRange(points.map((p) => p.price), 0.5, 0);
+  const [yMin, yMax] = paddedRange(points.map((p) => p.percent), 10, 0, 100);
+  const meanPrice = points.reduce((s, p) => s + p.price, 0) / points.length;
+  const meanScore = points.reduce((s, p) => s + p.percent, 0) / points.length;
+
+  const width = 640;
+  const height = 340;
+  const pad = { top: 16, right: 24, bottom: 40, left: 48 };
+  const plotW = width - pad.left - pad.right;
+  const plotH = height - pad.top - pad.bottom;
+  const x = (v) => pad.left + ((v - xMin) / (xMax - xMin)) * plotW;
+  const y = (v) => pad.top + (1 - (v - yMin) / (yMax - yMin)) * plotH;
+
+  const xTicks = [];
+  for (let t = xMin; t <= xMax + 1e-9; t += 0.5) xTicks.push(t);
+  const yTicks = [];
+  for (let t = yMin; t <= yMax + 1e-9; t += 10) yTicks.push(t);
+
+  const grid = `
+    ${xTicks.map((t) => `<line x1="${x(t)}" y1="${pad.top}" x2="${x(t)}" y2="${pad.top + plotH}" stroke="#1e293b" /><text x="${x(t)}" y="${pad.top + plotH + 20}" text-anchor="middle" fill="#64748b" font-size="12">${formatEuro(t)}</text>`).join("")}
+    ${yTicks.map((t) => `<line x1="${pad.left}" y1="${y(t)}" x2="${pad.left + plotW}" y2="${y(t)}" stroke="#1e293b" /><text x="${pad.left - 8}" y="${y(t) + 4}" text-anchor="end" fill="#64748b" font-size="12">${t}%</text>`).join("")}
+  `;
+  const means = `
+    <line x1="${x(meanPrice)}" y1="${pad.top}" x2="${x(meanPrice)}" y2="${pad.top + plotH}" stroke="#94a3b8" stroke-dasharray="5 4" />
+    <line x1="${pad.left}" y1="${y(meanScore)}" x2="${pad.left + plotW}" y2="${y(meanScore)}" stroke="#94a3b8" stroke-dasharray="5 4" />
+    <text x="${pad.left + 6}" y="${pad.top + 14}" fill="#34d399" font-size="12" font-weight="700">Goedkoop &amp; goed</text>
+    <text x="${pad.left + plotW - 6}" y="${pad.top + plotH - 8}" text-anchor="end" fill="#fb7185" font-size="12" font-weight="700">Duur &amp; minder</text>
+  `;
+  const dots = points
+    .map((point) => {
+      const isTop = topNames.has(point.name);
+      return `
+        <circle cx="${x(point.price)}" cy="${y(point.percent)}" r="7" fill="${isTop ? "#34d399" : "#f59e0b"}" fill-opacity="0.9" stroke="#0f172a" stroke-width="2">
+          <title>${escapeHtml(point.name)}: ${point.percent.toFixed(2)}% voor ${formatEuro(point.price)}</title>
+        </circle>
+      `;
+    })
+    .join("");
+  const labels = points
+    .filter((point) => topNames.has(point.name))
+    .map((point) => {
+      const cx = x(point.price);
+      const cy = y(point.percent);
+      const labelRight = cx < width - 170;
+      return `<text x="${labelRight ? cx + 11 : cx - 11}" y="${cy - 8}" text-anchor="${labelRight ? "start" : "end"}" fill="#e2e8f0" font-size="12" stroke="#0f172a" stroke-width="4" paint-order="stroke">${escapeHtml(point.name)}</text>`;
+    })
+    .join("");
+
+  container.innerHTML = `
+    <svg class="w-full h-auto" viewBox="0 0 ${width} ${height}" role="img" aria-labelledby="value-chart-title value-chart-desc">
+      <title id="value-chart-title">Pilsprijs tegenover jury-score</title>
+      <desc id="value-chart-desc">${points.map((p) => `${escapeHtml(p.name)}: ${formatEuro(p.price)}, ${p.percent.toFixed(2)}%`).join(", ")}</desc>
+      <g aria-hidden="true">
+        ${grid}
+        ${means}
+        ${dots}
+        ${labels}
+      </g>
+    </svg>
+    <p class="text-[10px] uppercase tracking-wider font-bold text-slate-500 mt-3 mb-2">Beste waar voor je geld</p>
+    <ol class="space-y-1.5">
+      ${ranked
+        .slice(0, 3)
+        .map(
+          (point, index) => `
+            <li class="flex items-center justify-between gap-3 text-[11px]">
+              <span class="text-slate-300 truncate"><span class="text-emerald-400 font-bold mr-1">${index + 1}.</span>${escapeHtml(point.name)}</span>
+              <span class="text-slate-400 shrink-0">${point.percent.toFixed(1)}% · ${formatEuro(point.price)} · <span class="text-emerald-400 font-bold">${point.value.toFixed(1)} %-punt per euro</span></span>
+            </li>
+          `,
+        )
+        .join("")}
+    </ol>
+  `;
+}
+
+function renderScoreTimeline(container, ratedCafes) {
+  if (!container) return;
+  const visits = ratedCafes
+    .map(({ cafe, stats }) => ({
+      name: cafe.displayName || cafe.name,
+      date: parseCafeVisitDate(cafe.visitDate),
+      percent: stats.percent,
+    }))
+    .filter((visit) => visit.date)
+    .sort((a, b) => a.date - b.date || a.name.localeCompare(b.name));
+  if (!visits.length) {
+    container.innerHTML =
+      '<p class="text-xs text-slate-500">Er zijn nog geen beoordeelde bezoeken met een datum.</p>';
+    return;
+  }
+
+  let runningTotal = 0;
+  visits.forEach((visit, index) => {
+    runningTotal += visit.percent;
+    visit.runningAverage = runningTotal / (index + 1);
+  });
+
+  const width = 640;
+  const height = 300;
+  const pad = { top: 16, right: 24, bottom: 40, left: 48 };
+  const plotW = width - pad.left - pad.right;
+  const plotH = height - pad.top - pad.bottom;
+  const [yMin, yMax] = paddedRange(visits.map((v) => v.percent), 10, 0, 100);
+  const x = (i) =>
+    pad.left + (visits.length === 1 ? plotW / 2 : (i / (visits.length - 1)) * plotW);
+  const y = (v) => pad.top + (1 - (v - yMin) / (yMax - yMin)) * plotH;
+  const dateLabel = (date) =>
+    date.toLocaleDateString("nl-BE", { day: "2-digit", month: "2-digit" });
+  const labelEvery = Math.ceil(visits.length / 12);
+
+  const yTicks = [];
+  for (let t = yMin; t <= yMax + 1e-9; t += 10) yTicks.push(t);
+  const grid = yTicks
+    .map(
+      (t) =>
+        `<line x1="${pad.left}" y1="${y(t)}" x2="${pad.left + plotW}" y2="${y(t)}" stroke="#1e293b" /><text x="${pad.left - 8}" y="${y(t) + 4}" text-anchor="end" fill="#64748b" font-size="12">${t}%</text>`,
+    )
+    .join("");
+  const xLabels = visits
+    .map((visit, i) =>
+      i % labelEvery === 0
+        ? `<text x="${x(i)}" y="${pad.top + plotH + 20}" text-anchor="middle" fill="#64748b" font-size="11">${dateLabel(visit.date)}</text>`
+        : "",
+    )
+    .join("");
+  const line = (key) => visits.map((v, i) => `${x(i)},${y(v[key])}`).join(" ");
+  const dots = visits
+    .map(
+      (visit, i) => `
+        <circle cx="${x(i)}" cy="${y(visit.percent)}" r="5.5" fill="#f59e0b" stroke="#0f172a" stroke-width="2">
+          <title>${escapeHtml(visit.name)} (${visit.date.toLocaleDateString("nl-BE")}): ${visit.percent.toFixed(2)}%</title>
+        </circle>
+      `,
+    )
+    .join("");
+  const best = visits.reduce((a, b) => (b.percent > a.percent ? b : a));
+  const latest = visits[visits.length - 1];
+
+  container.innerHTML = `
+    <svg class="w-full h-auto" viewBox="0 0 ${width} ${height}" role="img" aria-labelledby="timeline-chart-title timeline-chart-desc">
+      <title id="timeline-chart-title">Seizoensverloop van de jury-scores</title>
+      <desc id="timeline-chart-desc">${visits.map((v) => `${v.date.toLocaleDateString("nl-BE")} ${escapeHtml(v.name)}: ${v.percent.toFixed(2)}%`).join(", ")}</desc>
+      <g aria-hidden="true">
+        ${grid}
+        ${xLabels}
+        <polyline points="${line("percent")}" fill="none" stroke="#f59e0b" stroke-opacity="0.5" stroke-width="2" />
+        <polyline points="${line("runningAverage")}" fill="none" stroke="#e2e8f0" stroke-width="2" stroke-dasharray="6 4" />
+        ${dots}
+      </g>
+    </svg>
+    <div class="flex flex-wrap items-center gap-x-4 gap-y-1 mt-3 text-[11px] text-slate-400">
+      <span class="inline-flex items-center gap-1.5"><span class="inline-block w-2.5 h-2.5 rounded-full bg-amber-500"></span>Score per bezoek</span>
+      <span class="inline-flex items-center gap-1.5"><span class="inline-block w-4 border-t-2 border-dashed border-slate-200"></span>Lopend gemiddelde ${latest.runningAverage.toFixed(2)}%</span>
+      <span>Hoogste: ${escapeHtml(best.name)} (${best.percent.toFixed(2)}%)</span>
+    </div>
+  `;
+}
+
+function renderCategoryHeatmap(container, ratedCafes) {
+  if (!container) return;
+  if (!ratedCafes.length) {
+    container.innerHTML = EMPTY_SCORE_MESSAGE;
+    return;
+  }
+  const rows = ratedCafes.map(({ cafe, stats }) => ({
+    label: cafe.displayName || cafe.name,
+    values: stats.categoryAverages,
+    summary: `${stats.percent.toFixed(1)}%`,
+  }));
+  const footer = {
+    label: "Gemiddelde",
+    values: JUDGE_CATEGORIES.map(
+      (_, index) =>
+        ratedCafes.reduce((sum, entry) => sum + entry.stats.categoryAverages[index], 0) /
+        ratedCafes.length,
+    ),
+    summary: `${(ratedCafes.reduce((sum, entry) => sum + entry.stats.percent, 0) / ratedCafes.length).toFixed(1)}%`,
+  };
+  renderHeatTable(container, "Café", null, "Totaal", rows, footer);
+}
+
+function renderConsensusChart(container, ratedCafes) {
+  if (!container) return;
+  const totalMax = JUDGE_CATEGORIES.length * CATEGORY_MAX;
+  const rows = ratedCafes
+    .map(({ cafe }) => {
+      const judges = getValidJudges(cafe).map((judge) => ({
+        initials: judge.initials.trim(),
+        percent: (judge.scores.reduce((sum, score) => sum + score, 0) / totalMax) * 100,
+      }));
+      if (judges.length < 2) return null;
+      const percents = judges.map((judge) => judge.percent);
+      return {
+        name: cafe.displayName || cafe.name,
+        judges,
+        min: Math.min(...percents),
+        max: Math.max(...percents),
+        spread: standardDeviation(percents),
+      };
+    })
+    .filter(Boolean)
+    .sort((a, b) => a.spread - b.spread || a.name.localeCompare(b.name));
+  if (!rows.length) {
+    container.innerHTML =
+      '<p class="text-xs text-slate-500">Er zijn nog geen cafés met minstens twee juryleden.</p>';
+    return;
+  }
+
+  const [axisMin, axisMax] = paddedRange(
+    rows.flatMap((row) => [row.min, row.max]),
+    10,
+    0,
+    100,
+  );
+  const pos = (value) => ((value - axisMin) / (axisMax - axisMin)) * 100;
+  const most = rows[0];
+  const least = rows[rows.length - 1];
+  const highlight = (label, row, accent) => `
+    <div class="bg-slate-950/40 border border-slate-800 rounded-xl p-3 min-w-0">
+      <p class="text-[10px] uppercase tracking-wider font-bold text-slate-500">${label}</p>
+      <p class="text-sm font-extrabold ${accent} mt-1 truncate" title="${escapeHtml(row.name)}">${escapeHtml(row.name)}</p>
+      <p class="text-[10px] text-slate-500 mt-1">Spreiding ±${row.spread.toFixed(1)} %-punt</p>
+    </div>
+  `;
+
+  container.innerHTML = `
+    <div class="grid grid-cols-2 gap-3 mb-5">
+      ${highlight("Meest eensgezind", most, "text-emerald-400")}
+      ${highlight("Meest verdeeld", least, "text-rose-400")}
+    </div>
+    <ol class="space-y-3">
+      ${rows
+        .map((row) => {
+          const safeName = escapeHtml(row.name);
+          return `
+            <li>
+              <div class="flex items-center justify-between gap-3 mb-1">
+                <span class="text-[11px] text-slate-300 truncate" title="${safeName}">${safeName}</span>
+                <span class="text-[11px] text-slate-400 shrink-0">${row.min.toFixed(0)}–${row.max.toFixed(0)}% · ±${row.spread.toFixed(1)}</span>
+              </div>
+              <div class="relative h-3 rounded-full bg-slate-800" role="img" aria-label="${safeName}: ${row.judges.map((j) => `${escapeHtml(j.initials)} ${j.percent.toFixed(0)}%`).join(", ")}">
+                <div class="absolute inset-y-0 rounded-full bg-amber-500/25" style="left: ${pos(row.min)}%; width: ${pos(row.max) - pos(row.min)}%"></div>
+                ${row.judges
+                  .map(
+                    (judge) => `<span class="absolute top-1/2 w-2.5 h-2.5 -ml-[5px] -mt-[5px] rounded-full bg-amber-400 border border-slate-950" style="left: ${pos(judge.percent)}%" title="${escapeHtml(judge.initials)}: ${judge.percent.toFixed(1)}%"></span>`,
+                  )
+                  .join("")}
+              </div>
+            </li>
+          `;
+        })
+        .join("")}
+    </ol>
+    <div class="flex justify-between text-[10px] text-slate-600 mt-2"><span>${axisMin}%</span><span>${axisMax}%</span></div>
+  `;
+}
+
+function renderJudgeProfile(container, ratedCafes) {
+  if (!container) return;
+  const profiles = new Map();
+  ratedCafes.forEach(({ cafe }) => {
+    getValidJudges(cafe).forEach((judge) => {
+      const initials = judge.initials.trim();
+      const profile = profiles.get(initials) || {
+        sums: JUDGE_CATEGORIES.map(() => 0),
+        cafeCount: 0,
+      };
+      JUDGE_CATEGORIES.forEach((_, index) => {
+        profile.sums[index] += Number(judge.scores[index]) || 0;
+      });
+      profile.cafeCount += 1;
+      profiles.set(initials, profile);
+    });
+  });
+  if (!profiles.size) {
+    container.innerHTML = EMPTY_SCORE_MESSAGE;
+    return;
+  }
+
+  const rows = Array.from(profiles, ([initials, profile]) => {
+    const values = profile.sums.map((sum) => sum / profile.cafeCount);
+    const overall = values.reduce((sum, value) => sum + value, 0) / values.length;
+    return {
+      label: initials,
+      extra: profile.cafeCount,
+      values,
+      summary: `${overall.toFixed(1)}`,
+      cafeCount: profile.cafeCount,
+    };
+  }).sort((a, b) => b.cafeCount - a.cafeCount || a.label.localeCompare(b.label));
+  renderHeatTable(container, "Jurylid", "Cafés", "Gem.", rows);
+}
+
+function renderSeasonProgress(container) {
+  if (!container) return;
+  const total = cafesList.length;
+  const visited = cafesList.filter((cafe) => cafe.rated);
+  const remaining = total - visited.length;
+  const percent = total ? (visited.length / total) * 100 : 0;
+  const dates = visited
+    .map((cafe) => parseCafeVisitDate(cafe.visitDate))
+    .filter(Boolean)
+    .sort((a, b) => a - b);
+
+  const months = [];
+  if (dates.length) {
+    const cursor = new Date(dates[0].getFullYear(), dates[0].getMonth(), 1);
+    const last = dates[dates.length - 1];
+    while (cursor <= last) {
+      months.push({
+        date: new Date(cursor),
+        count: dates.filter(
+          (date) =>
+            date.getFullYear() === cursor.getFullYear() &&
+            date.getMonth() === cursor.getMonth(),
+        ).length,
+      });
+      cursor.setMonth(cursor.getMonth() + 1);
+    }
+  }
+  const maxMonth = Math.max(1, ...months.map((month) => month.count));
+  const pace = months.length ? dates.length / months.length : 0;
+  let projection = "Nog geen bezoeken met een datum om een tempo te berekenen.";
+  if (remaining === 0) {
+    projection = "Alle cafés uit de lijst zijn bezocht. Schol!";
+  } else if (pace > 0) {
+    const monthsNeeded = Math.ceil(remaining / pace);
+    const lastDate = dates[dates.length - 1];
+    const finish = new Date(lastDate.getFullYear(), lastDate.getMonth() + monthsNeeded, 1);
+    projection = `Aan dit tempo is de lijst rond in <span class="font-bold text-white">${finish.toLocaleDateString("nl-BE", { month: "long", year: "numeric" })}</span> (nog ${monthsNeeded} ${monthsNeeded === 1 ? "maand" : "maanden"}).`;
+  }
+
+  container.innerHTML = `
+    <div class="flex items-end justify-between gap-3 mb-2">
+      <p class="text-2xl font-extrabold text-white">${visited.length} <span class="text-sm font-bold text-slate-500">/ ${total} bezocht</span></p>
+      <p class="text-sm font-bold text-amber-400">${percent.toFixed(0)}%</p>
+    </div>
+    <div class="h-3 rounded-full bg-slate-800 overflow-hidden" role="progressbar" aria-label="Seizoensvoortgang" aria-valuenow="${visited.length}" aria-valuemin="0" aria-valuemax="${total}">
+      <div class="h-full rounded-full bg-gradient-to-r from-amber-600 to-amber-400" style="width: ${percent}%"></div>
+    </div>
+    <p class="text-[11px] text-slate-500 mt-2">Nog ${remaining} ${remaining === 1 ? "café" : "cafés"} te gaan · gemiddeld ${pace.toFixed(1).replace(".", ",")} bezoeken per maand</p>
+    <p class="text-[10px] uppercase tracking-wider font-bold text-slate-500 mt-5 mb-2">Bezoeken per maand</p>
+    <ol class="space-y-2">
+      ${months
+        .map(
+          ({ date, count }) => `
+            <li class="flex items-center gap-3 text-[11px]">
+              <span class="w-20 shrink-0 text-slate-300 capitalize">${date.toLocaleDateString("nl-BE", { month: "short", year: "2-digit" })}</span>
+              <div class="flex-1 h-2 rounded-full bg-slate-800 overflow-hidden">
+                <div class="h-full rounded-full bg-gradient-to-r from-amber-600 to-amber-400" style="width: ${(count / maxMonth) * 100}%"></div>
+              </div>
+              <span class="w-6 shrink-0 text-right font-bold text-amber-400">${count}</span>
+            </li>
+          `,
+        )
+        .join("")}
+    </ol>
+    <p class="text-[11px] text-slate-400 mt-4">${projection}</p>
+  `;
+}
+
+function renderJudgeAttendanceChart(container, judges, visitCount) {
+  if (!container) return;
+  if (!judges.length || !visitCount) {
+    container.innerHTML =
+      '<p class="text-xs text-slate-500">Er zijn nog geen jurybeoordelingen beschikbaar.</p>';
+    return;
+  }
+
+  const attendance = [...judges].sort(
+    (a, b) => b.cafeCount - a.cafeCount || a.initials.localeCompare(b.initials),
+  );
+  const maxCount = attendance[0].cafeCount;
+  const minCount = attendance[attendance.length - 1].cafeCount;
+  const cafeLabel = (count) => `${count} ${count === 1 ? "café" : "cafés"}`;
+  const initialsWith = (count) =>
+    attendance
+      .filter((judge) => judge.cafeCount === count)
+      .map((judge) => judge.initials)
+      .join(", ");
+  const highlight = (label, initials, count, accent) => `
+    <div class="bg-slate-950/40 border border-slate-800 rounded-xl p-3 min-w-0">
+      <p class="text-[10px] uppercase tracking-wider font-bold text-slate-500">${label}</p>
+      <p class="text-base font-extrabold ${accent} mt-1 break-words">${escapeHtml(initials)}</p>
+      <p class="text-[10px] text-slate-500 mt-1">${cafeLabel(count)} van ${visitCount} (${Math.round((count / visitCount) * 100)}%)</p>
+    </div>
+  `;
+
+  container.innerHTML = `
+    <div class="grid grid-cols-2 gap-3 mb-5">
+      ${highlight("Meest aanwezig", initialsWith(maxCount), maxCount, "text-emerald-400")}
+      ${highlight("Minst aanwezig", initialsWith(minCount), minCount, "text-rose-400")}
+    </div>
+    <ol class="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3">
+      ${attendance
+        .map(({ initials, cafeCount }) => {
+          const safeInitials = escapeHtml(initials);
+          const width = (cafeCount / visitCount) * 100;
+          const isMost = cafeCount === maxCount;
+          const isLeast = cafeCount === minCount && !isMost;
+          const barColor = isMost
+            ? "from-emerald-600 to-emerald-400"
+            : isLeast
+              ? "from-rose-600 to-rose-400"
+              : "from-amber-600 to-amber-400";
+          const countColor = isMost
+            ? "text-emerald-400"
+            : isLeast
+              ? "text-rose-400"
+              : "text-amber-400";
+          return `
+            <li>
+              <div class="flex items-center justify-between gap-3 mb-1">
+                <span class="text-[11px] font-bold text-slate-300">${safeInitials}</span>
+                <span class="text-[11px] font-bold ${countColor} shrink-0">${cafeLabel(cafeCount)}</span>
+              </div>
+              <div
+                class="h-2 rounded-full bg-slate-800 overflow-hidden"
+                role="progressbar"
+                aria-label="Aanwezigheid ${safeInitials}"
+                aria-valuenow="${cafeCount}"
+                aria-valuemin="0"
+                aria-valuemax="${visitCount}"
+              >
+                <div class="h-full rounded-full bg-gradient-to-r ${barColor}" style="width: ${width}%"></div>
+              </div>
+            </li>
+          `;
+        })
+        .join("")}
+    </ol>
+    <div class="flex justify-between text-[10px] text-slate-600 mt-2"><span>0</span><span>${visitCount} beoordeelde cafés</span></div>
+  `;
+}
+
+function renderCafeAnalytics() {
+  const summary = document.getElementById("cafe-analytics-summary");
+  const scoreChart = document.getElementById("cafe-score-chart");
+  const categoryChart = document.getElementById("cafe-category-chart");
+  if (!summary || !scoreChart || !categoryChart) return;
+
+  const ratedCafes = cafesList
+    .filter(
+      (cafe) =>
+        cafe.rated && String(cafe.score || "").trim().toUpperCase() !== "NVT",
+    )
+    .map((cafe) => ({ cafe, stats: computeScoreStats(cafe) }))
+    .filter((entry) => entry.stats)
+    .sort((a, b) => b.stats.percent - a.stats.percent);
+  const averageScore = ratedCafes.length
+    ? ratedCafes.reduce((sum, entry) => sum + entry.stats.percent, 0) /
+      ratedCafes.length
+    : null;
+  const completion = cafesList.length
+    ? (ratedCafes.length / cafesList.length) * 100
+    : 0;
+  const leader = ratedCafes[0];
+  const priceObservations = (field) =>
+    cafesList
+      .map((cafe) => {
+        const price = parseCafePrice(cafe[field]);
+        if (price === null) return null;
+        return { name: cafe.displayName || cafe.name, price };
+      })
+      .filter(Boolean);
+  const pilsPrices = priceObservations("pricePils");
+  const piconPrices = priceObservations("pricePicon");
+  const averagePrice = (observations) =>
+    observations.length
+      ? observations.reduce((sum, entry) => sum + entry.price, 0) /
+        observations.length
+      : null;
+  const pilsAverage = averagePrice(pilsPrices);
+  const piconAverage = averagePrice(piconPrices);
+
+  const judgeTotals = new Map();
+  ratedCafes.forEach(({ cafe }) => {
+    cafe.judges.forEach((judge) => {
+      const initials = judge.initials.trim();
+      if (!initials || initials === "--") return;
+      const scores = judge.scores.filter(Number.isFinite);
+      if (!scores.length) return;
+
+      const total = scores.reduce((sum, score) => sum + score, 0);
+      const entry = judgeTotals.get(initials) || {
+        total: 0,
+        cafeCount: 0,
+      };
+      entry.total += total / scores.length;
+      entry.cafeCount += 1;
+      judgeTotals.set(initials, entry);
+    });
+  });
+  const judgeAverages = Array.from(judgeTotals, ([initials, entry]) => ({
+    initials,
+    average: entry.total / entry.cafeCount,
+    cafeCount: entry.cafeCount,
+  })).sort(
+    (a, b) =>
+      a.average - b.average || a.initials.localeCompare(b.initials),
+  );
+  const strictestJudge = judgeAverages[0];
+  const leastStrictJudge = judgeAverages[judgeAverages.length - 1];
+  const metricCard = (label, value, detail) => `
+    <div class="bg-slate-900/50 border border-slate-800 rounded-xl p-3 sm:p-4 min-w-0">
+      <p class="text-[10px] uppercase tracking-wider font-bold text-slate-500">${escapeHtml(label)}</p>
+      <p class="text-lg sm:text-xl font-extrabold text-white mt-1 break-words" title="${escapeHtml(value)}">${escapeHtml(value)}</p>
+      <p class="text-[10px] text-slate-500 mt-1 truncate">${escapeHtml(detail)}</p>
+    </div>
+  `;
+
+  summary.innerHTML = [
+    metricCard("Cafés in de lijst", cafesList.length, "In het overzicht"),
+    metricCard(
+      "Scores toegekend",
+      `${ratedCafes.length} / ${cafesList.length}`,
+      `${completion.toFixed(0)}% met een jury-score`,
+    ),
+    metricCard(
+      "Gemiddelde score",
+      averageScore === null ? "—" : `${averageScore.toFixed(2)}%`,
+      "Gemiddelde van de caféscores",
+    ),
+    metricCard(
+      "Koploper",
+      leader ? leader.cafe.displayName || leader.cafe.name : "Nog geen score",
+      leader
+        ? `${leader.stats.percent.toFixed(2)}% jury-score`
+        : "Beoordeel een café om te starten",
+    ),
+    metricCard(
+      "Gemiddelde pilsprijs",
+      pilsAverage === null ? "—" : formatEuro(pilsAverage),
+      `${pilsPrices.length} cafés met een bekende prijs`,
+    ),
+    metricCard(
+      "Gemiddelde piconprijs",
+      piconAverage === null ? "—" : formatEuro(piconAverage),
+      `${piconPrices.length} cafés met een bekende prijs`,
+    ),
+    metricCard(
+      "Strengste jurylid",
+      strictestJudge
+        ? `${strictestJudge.initials} · ${strictestJudge.average.toFixed(2)} / ${CATEGORY_MAX}`
+        : "Nog geen scores",
+      strictestJudge
+        ? `Gemiddelde over ${strictestJudge.cafeCount} ${strictestJudge.cafeCount === 1 ? "café" : "cafés"}`
+        : "Geen jurydata beschikbaar",
+    ),
+    metricCard(
+      "Minst strenge jurylid",
+      leastStrictJudge
+        ? `${leastStrictJudge.initials} · ${leastStrictJudge.average.toFixed(2)} / ${CATEGORY_MAX}`
+        : "Nog geen scores",
+      leastStrictJudge
+        ? `Gemiddelde over ${leastStrictJudge.cafeCount} ${leastStrictJudge.cafeCount === 1 ? "café" : "cafés"}`
+        : "Geen jurydata beschikbaar",
+    ),
+  ].join("");
+
+  if (!ratedCafes.length) {
+    const emptyMessage =
+      '<p class="text-xs text-slate-500">Er zijn nog geen jurybeoordelingen beschikbaar.</p>';
+    scoreChart.innerHTML = emptyMessage;
+    categoryChart.innerHTML = emptyMessage;
+  } else {
+    scoreChart.innerHTML = `
+      <ol class="space-y-3">
+        ${ratedCafes
+          .map(({ cafe, stats }) => {
+            const name = cafe.displayName || cafe.name;
+            const width = Math.max(0, Math.min(100, stats.percent));
+            const safeName = escapeHtml(name);
+            return `
+              <li>
+                <div class="flex items-center justify-between gap-3 mb-1">
+                  <span class="text-[11px] text-slate-300 truncate" title="${safeName}">${safeName}</span>
+                  <span class="text-[11px] font-bold text-amber-400 shrink-0">${stats.percent.toFixed(2)}%</span>
+                </div>
+                <div
+                  class="h-2 rounded-full bg-slate-800 overflow-hidden"
+                  role="progressbar"
+                  aria-label="Score ${safeName}"
+                  aria-valuenow="${stats.percent.toFixed(2)}"
+                  aria-valuemin="0"
+                  aria-valuemax="100"
+                >
+                  <div class="h-full rounded-full bg-gradient-to-r from-amber-600 to-amber-400" style="width: ${width}%"></div>
+                </div>
+              </li>
+            `;
+          })
+          .join("")}
+      </ol>
+      <div class="flex justify-between text-[10px] text-slate-600 mt-2"><span>0%</span><span>100%</span></div>
+    `;
+
+    const categoryAverages = JUDGE_CATEGORIES.map((name, index) => ({
+      name,
+      average:
+        ratedCafes.reduce(
+          (sum, entry) => sum + entry.stats.categoryAverages[index],
+          0,
+        ) / ratedCafes.length,
+    }));
+    categoryChart.innerHTML = `
+      <ol class="space-y-4">
+        ${categoryAverages
+          .map(({ name, average }) => {
+            const width = Math.max(
+              0,
+              Math.min(100, (average / CATEGORY_MAX) * 100),
+            );
+            return `
+              <li>
+                <div class="flex items-center justify-between gap-3 mb-1">
+                  <span class="text-[11px] text-slate-300">${escapeHtml(name)}</span>
+                  <span class="text-[11px] font-bold text-amber-400 shrink-0">${average.toFixed(1)} / ${CATEGORY_MAX}</span>
+                </div>
+                <div
+                  class="h-2 rounded-full bg-slate-800 overflow-hidden"
+                  role="progressbar"
+                  aria-label="Gemiddelde score ${escapeHtml(name)}"
+                  aria-valuenow="${average.toFixed(1)}"
+                  aria-valuemin="0"
+                  aria-valuemax="${CATEGORY_MAX}"
+                >
+                  <div class="h-full rounded-full bg-gradient-to-r from-amber-600 to-amber-400" style="width: ${width}%"></div>
+                </div>
+              </li>
+            `;
+          })
+          .join("")}
+      </ol>
+      <div class="flex justify-between text-[10px] text-slate-600 mt-2"><span>0</span><span>${CATEGORY_MAX}</span></div>
+    `;
+  }
+
+  renderJudgeAttendanceChart(
+    document.getElementById("cafe-judge-attendance-chart"),
+    judgeAverages,
+    ratedCafes.length,
+  );
+  renderValueChart(document.getElementById("cafe-value-chart"), ratedCafes);
+  renderScoreTimeline(document.getElementById("cafe-timeline-chart"), ratedCafes);
+  renderCategoryHeatmap(document.getElementById("cafe-category-heatmap"), ratedCafes);
+  renderConsensusChart(document.getElementById("cafe-consensus-chart"), ratedCafes);
+  renderJudgeProfile(document.getElementById("cafe-judge-profile"), ratedCafes);
+  renderSeasonProgress(document.getElementById("cafe-progress-chart"));
+
+  renderPriceDotPlot(
+    document.getElementById("cafe-pils-price-chart"),
+    "pils-price-chart",
+    "Pilsprijs",
+    pilsPrices,
+    "#f59e0b",
+  );
+  renderPriceDotPlot(
+    document.getElementById("cafe-picon-price-chart"),
+    "picon-price-chart",
+    "Piconprijs",
+    piconPrices,
+    "#a78bfa",
+  );
 }
 
 /**
@@ -777,6 +1697,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   renderCafes();
   renderNextVisitBanner();
   renderLeaderboard();
+  renderCafeAnalytics();
   renderCafeDetailPages();
   lucide.createIcons();
 

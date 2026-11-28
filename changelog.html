@@ -125,10 +125,70 @@
         <div
           class="relative border-l-2 border-slate-800 ml-3 pl-6 space-y-10 py-4"
         >
-          <!-- v1.13.0 -->
+          <!-- v1.14.0 -->
           <div class="relative">
             <span
               class="absolute -left-[31px] top-1.5 bg-amber-500 text-dark-900 rounded-full p-1 border-4 border-dark-950"
+            >
+              <i data-lucide="git-commit" class="w-3 h-3"></i>
+            </span>
+            <div class="flex flex-wrap items-center gap-2 mb-1">
+              <span class="text-white font-extrabold text-lg"
+                >Versie 1.14.0</span
+              >
+              <span
+                class="text-xs bg-slate-900 border border-slate-800 text-slate-400 px-2 py-0.5 rounded font-mono"
+                >28/11/2026</span
+              >
+            </div>
+            <p class="text-slate-300 text-sm font-semibold mb-2">
+              Rapporten &amp; Grafieken
+            </p>
+            <ul
+              class="list-disc list-inside text-slate-400 text-xs space-y-1 pl-1"
+            >
+              <li>
+                <strong>Nieuwe rapportenpagina</strong>: Via de knop
+                "Rapporten" op de startpagina opent <code>rapporten.html</code>
+                met een seizoensrapport. Alle cijfers en grafieken worden live
+                berekend uit <code>cafes.json</code>.
+              </li>
+              <li>
+                <strong>Kerncijfers</strong>: Aantal cafés, toegekende scores,
+                gemiddelde score, koploper, gemiddelde pils- en piconprijs en
+                het strengste en minst strenge jurylid.
+              </li>
+              <li>
+                <strong>Prijsverdeling</strong>: Dotplots van de pils- en
+                piconprijzen (één stip per café) met mediaan, gemiddelde en
+                bereik.
+              </li>
+              <li>
+                <strong>Scores</strong>: Ranking van de cafés, gemiddelde per
+                jurycategorie, het seizoensverloop met lopend gemiddelde en
+                een heatmap met de sterktes en zwaktes per café.
+              </li>
+              <li>
+                <strong>Prijs vs. score</strong>: Spreidingsgrafiek van
+                pilsprijs tegenover jury-score, met een top 3 "beste waar voor
+                je geld".
+              </li>
+              <li>
+                <strong>Jury-inzichten</strong>: Aanwezigheid per jurylid
+                (meest en minst aanwezig), jury-eensgezindheid per café en een
+                juryprofiel met het gemiddelde per categorie per jurylid.
+              </li>
+              <li>
+                <strong>Seizoensvoortgang</strong>: Bezochte cafés, bezoeken
+                per maand en een schatting van wanneer de lijst rond is.
+              </li>
+            </ul>
+          </div>
+
+          <!-- v1.13.0 -->
+          <div class="relative">
+            <span
+              class="absolute -left-[31px] top-1.5 bg-slate-800 text-slate-400 rounded-full p-1 border-4 border-dark-950"
             >
               <i data-lucide="git-commit" class="w-3 h-3"></i>
             </span>
@@ -540,7 +600,7 @@
           <span
             class="text-[10px] bg-slate-900 border border-slate-800 px-2 py-0.5 rounded text-slate-400 font-mono"
           >
-            v1.13.0
+            v1.14.0
           </span>
         </div>
         <p class="text-center md:text-right">
