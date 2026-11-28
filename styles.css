@@ -158,6 +158,10 @@ body.drunk {
   margin: 6px 0 2px;
 }
 
+.map-popup-score.map-popup-nvt {
+  color: #fb7185;
+}
+
 .map-popup-link {
   margin-top: 8px;
   font-size: 12px;

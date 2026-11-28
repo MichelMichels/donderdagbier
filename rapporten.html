@@ -39,7 +39,7 @@
       href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="styles.css" />
+    <link rel="stylesheet" href="styles.css?v=1.16.0" />
     <script src="https://unpkg.com/lucide@latest"></script>
   </head>
   <body
@@ -104,6 +104,9 @@
           </h1>
           <p class="text-slate-400 text-sm mt-2">
             Een overzicht van scores, prijzen en juryresultaten van dit seizoen.
+            NVT-cafés (dicht, vroeger gesloten of geen echt café) tellen niet
+            mee. Heeft een café geen picon, dan krijgt de categorie Picon 0
+            punten.
           </p>
         </div>
 
@@ -159,7 +162,8 @@
                 Gemiddelde per jurycategorie
               </h2>
               <p class="text-[11px] text-slate-500 mt-1">
-                Gemiddelde score op 12 over cafés met een jury-score
+                Gemiddelde score op 12 over cafés met een jury-score. Geen
+                picon in huis telt als 0 voor Picon.
               </p>
             </figcaption>
             <div id="cafe-category-chart"></div>
@@ -214,7 +218,7 @@
               </h2>
               <p class="text-[11px] text-slate-500 mt-1">
                 Gemiddelde jury-score per categorie; groen is sterk, rood is
-                zwak
+                zwak. Een 0 voor Picon betekent meestal dat er geen picon was.
               </p>
             </figcaption>
             <div id="cafe-category-heatmap"></div>
@@ -278,6 +282,6 @@
       </div>
     </footer>
 
-    <script src="app.js" defer></script>
+    <script src="app.js?v=1.16.0" defer></script>
   </body>
 </html>

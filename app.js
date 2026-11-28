@@ -1,6 +1,6 @@
 /**
  * Donderdagbier.be - Application Logic, Database, Roulette & Easter Eggs
- * Versie: v1.15.0
+ * Versie: v1.16.0
  */
 
 // De complete, actieve lijst van cafés (Groot-Waregem: Waregem en de deelgemeentes Beveren-Leie, Desselgem, Nieuwenhove en Sint-Eloois-Vijve)
@@ -11,7 +11,9 @@ let cafesList = [];
  * Laadt de cafélijst in vanuit het externe cafes.json bestand
  */
 async function loadCafesList() {
-  const response = await fetch("cafes.json");
+  // "no-cache" laat de browser altijd bij de server checken of er een nieuwere
+  // versie is, zodat nieuwe velden (zoals lat/lng) meteen beschikbaar zijn
+  const response = await fetch("cafes.json", { cache: "no-cache" });
   if (!response.ok) {
     throw new Error(`Kon cafes.json niet inladen (status ${response.status})`);
   }
@@ -22,6 +24,9 @@ async function loadCafesList() {
 // Categorieën van de jurybeoordeling, telkens op een schaal van 0 tot CATEGORY_MAX.
 // Enkel de ruwe scores per jurylid staan in cafes.json; alle gemiddelden,
 // totalen en percentages worden hieruit berekend zodat ze nooit uit sync kunnen raken.
+//
+// Spelregel picon: heeft een café geen picon, dan valt de categorie niet weg.
+// Ze blijft meetellen (maximum blijft 6 × 12 = 72) en de jury geeft 0 punten.
 const JUDGE_CATEGORIES = [
   "Pils",
   "Picon",
@@ -52,7 +57,7 @@ function getCafeSlug(cafe) {
  * jurygegevens beschikbaar zijn.
  */
 function computeScoreStats(cafe) {
-  if (!cafe.judges || cafe.judges.length === 0) return null;
+  if (isNvt(cafe) || !cafe.judges || cafe.judges.length === 0) return null;
 
   const totalMax = JUDGE_CATEGORIES.length * CATEGORY_MAX;
 
@@ -75,6 +80,25 @@ function computeScoreStats(cafe) {
   const percent = (totalPoints / totalMax) * 100;
 
   return { categoryAverages, totalMax, totalPoints, percent, judges };
+}
+
+/**
+ * NVT-cafés ("niet van toepassing") zijn wel bezocht, maar krijgen geen score:
+ * het café was dicht, sloot vroeger of bleek geen echt café. Ze staan in de
+ * lijst en hebben een verslag, maar tellen niet mee in de ranking en rapporten.
+ */
+function isNvt(cafe) {
+  return cafe.nvt === true;
+}
+
+/** Cafés die meetellen in de rapporten en tellers (alles behalve NVT) */
+function getActiveCafes() {
+  return cafesList.filter((cafe) => !isNvt(cafe));
+}
+
+/** Prijzen staan als getal in cafes.json (bv. 2.50); null = onbekend of niet verkrijgbaar */
+function hasPrice(value) {
+  return Number.isFinite(value) && value > 0;
 }
 
 let currentFilter = "all";
@@ -127,10 +151,32 @@ function renderNextVisitBanner() {
  * Geeft de cafés terug die voldoen aan de actieve filter en zoekterm.
  * Wordt gedeeld door de lijst- en de kaartweergave.
  */
+function normalizeSearchText(text) {
+  return String(text || "")
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "") // accenten: "arrivee" vindt "Arrivée"
+    .replace(/['’`]/g, "") // "t leeuwke" en "'t leeuwke" zijn gelijk
+    .replace(/[^a-z0-9]+/g, " ")
+    .trim();
+}
+
+/**
+ * Zoekt in naam, volledige naam, adres en gemeente. Elk woord van de zoekterm
+ * moet ergens voorkomen, in eender welke volgorde ("markt den" vindt Den Directeur).
+ */
+function matchesSearchQuery(cafe, query) {
+  const terms = normalizeSearchText(query).split(" ").filter(Boolean);
+  if (!terms.length) return true;
+  const haystack = normalizeSearchText(
+    [cafe.name, cafe.displayName, cafe.address, cafe.location].join(" "),
+  );
+  return terms.every((term) => haystack.includes(term));
+}
+
 function getFilteredCafes() {
-  const query = searchQuery.toLowerCase();
   return cafesList.filter((cafe) => {
-    const matchesSearch = cafe.name.toLowerCase().includes(query);
+    const matchesSearch = matchesSearchQuery(cafe, searchQuery);
     if (currentFilter === "rated") {
       return matchesSearch && cafe.rated;
     } else if (currentFilter === "unrated") {
@@ -209,6 +255,9 @@ function cafeMarkerStyle(cafe) {
   if (cafe.nextVisit) {
     return { radius: 10, color: "#6ee7b7", weight: 3, fillColor: "#34d399", fillOpacity: 0.95 };
   }
+  if (isNvt(cafe)) {
+    return { radius: 7, color: "#fda4af", weight: 2, fillColor: "#9f1239", fillOpacity: 0.9 };
+  }
   if (cafe.rated) {
     return { radius: 8, color: "#fde68a", weight: 2, fillColor: "#f59e0b", fillOpacity: 0.95 };
   }
@@ -221,14 +270,16 @@ function cafePopupHtml(cafe) {
 
   if (cafe.rated) {
     const stats = computeScoreStats(cafe);
-    const scoreText = stats ? `${stats.percent.toFixed(2)}%` : cafe.score || "–";
+    const scoreLine = stats
+      ? `<div class="map-popup-score">★ ${stats.percent.toFixed(2)}%</div>`
+      : `<div class="map-popup-score map-popup-nvt">NVT · geen score</div>`;
     const slug = getCafeSlug(cafe);
     return `
       <div class="map-popup-title">${name}</div>
       ${address}
-      <div class="map-popup-score">★ ${escapeHtml(scoreText)}</div>
+      ${scoreLine}
       <div class="map-popup-meta">Bezocht op ${escapeHtml(cafe.visitDate || "–")}</div>
-      <button type="button" class="map-popup-link" onclick="showPage('detail-${slug}')">Bekijk rapport →</button>
+      <button type="button" class="map-popup-link" onclick="showPage('detail-${slug}')">${stats ? "Bekijk rapport" : "Lees het verslag"} →</button>
     `;
   }
 
@@ -254,8 +305,9 @@ function renderCafeMap() {
 
   const filtered = getFilteredCafes();
   const located = filtered.filter(hasCoordinates);
-  // Volgende halte bovenaan tekenen, beoordeelde cafés boven de nog te bezoeken
-  const order = (cafe) => (cafe.nextVisit ? 2 : cafe.rated ? 1 : 0);
+  // Volgende halte bovenaan tekenen, beoordeelde cafés boven NVT en nog te bezoeken
+  const order = (cafe) =>
+    cafe.nextVisit ? 3 : computeScoreStats(cafe) ? 2 : isNvt(cafe) ? 1 : 0;
   located
     .slice()
     .sort((a, b) => order(a) - order(b))
@@ -298,28 +350,35 @@ function renderCafes() {
     if (cafe.rated) {
       const targetPage = `detail-${getCafeSlug(cafe)}`;
       const stats = computeScoreStats(cafe);
-      const scoreText = stats ? `${stats.percent.toFixed(2)}%` : cafe.score;
+      const nvt = isNvt(cafe);
+      const badge = nvt
+        ? `<span class="px-2 py-0.5 rounded bg-rose-500/10 text-rose-400 text-[10px] font-bold" title="Niet van toepassing: bezocht, maar zonder score">NVT</span>`
+        : `<span class="px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 text-[10px] font-bold">Beoordeeld</span>`;
+      const scoreBlock = stats
+        ? `<div class="flex items-center gap-1 text-amber-400 text-xs font-bold">
+                            <i data-lucide="star" class="w-3.5 h-3.5 fill-amber-400"></i>
+                            <span>${stats.percent.toFixed(2)}%</span>
+                        </div>`
+        : `<span class="text-slate-500 text-xs font-bold">Geen score</span>`;
 
-      card.className =
-        "bg-slate-900/60 border border-amber-500/30 rounded-xl p-5 flex flex-col justify-between hover:border-amber-500/60 transition-all cursor-pointer group";
+      card.className = nvt
+        ? "bg-slate-900/40 border border-slate-800 rounded-xl p-5 flex flex-col justify-between hover:border-rose-500/40 transition-all cursor-pointer group"
+        : "bg-slate-900/60 border border-amber-500/30 rounded-xl p-5 flex flex-col justify-between hover:border-amber-500/60 transition-all cursor-pointer group";
       card.onclick = () => showPage(targetPage);
       card.innerHTML = `
                 <div>
                     <div class="flex justify-between items-start mb-2">
-                        <span class="px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 text-[10px] font-bold">Beoordeeld</span>
-                        <div class="flex items-center gap-1 text-amber-400 text-xs font-bold">
-                            <i data-lucide="star" class="w-3.5 h-3.5 fill-amber-400"></i>
-                            <span>${scoreText}</span>
-                        </div>
+                        ${badge}
+                        ${scoreBlock}
                     </div>
                     <h4 class="text-base font-bold text-white group-hover:text-amber-400 transition-colors">${cafe.name}</h4>
                     <p class="text-slate-500 text-xs flex items-center gap-1 mt-1">
                         <i data-lucide="map-pin" class="w-3 h-3"></i> ${cafe.location}
                     </p>
                     <div class="flex items-center gap-2 mt-3 text-[11px] text-slate-400 bg-slate-950/40 px-2 py-1.5 rounded-lg border border-slate-800/40">
-                        <span class="font-semibold text-emerald-500">Pils: ${cafe.pricePils}</span>
+                        <span class="font-semibold ${hasPrice(cafe.pricePils) ? "text-emerald-500" : "text-slate-500"}">Pils: ${hasPrice(cafe.pricePils) ? formatEuro(cafe.pricePils) : "Onbekend"}</span>
                         <span class="text-slate-700">|</span>
-                        <span class="font-semibold ${cafe.pricePicon ? "text-purple-400" : "text-slate-500"}">Picon: ${cafe.pricePicon || "Geen"}</span>
+                        <span class="font-semibold ${hasPrice(cafe.pricePicon) ? "text-purple-400" : "text-slate-500"}">Picon: ${hasPrice(cafe.pricePicon) ? formatEuro(cafe.pricePicon) : "Geen"}</span>
                     </div>
                 </div>
                 <div class="mt-4 pt-3 border-t border-slate-800/80 flex items-center justify-between text-xs text-slate-400">
@@ -474,14 +533,10 @@ function escapeHtml(value) {
 }
 
 function parseCafePrice(value) {
-  if (typeof value !== "string") return null;
-  const match = value.match(/^\s*€\s*(\d+(?:[.,]\d{1,2})?)\s*$/);
-  if (!match) return null;
-
-  const price = Number(match[1].replace(",", "."));
-  return Number.isFinite(price) ? price : null;
+  return hasPrice(value) ? value : null;
 }
 
+/** Belgische schrijfwijze: €2,50 */
 function formatEuro(price) {
   return `€${price.toFixed(2).replace(".", ",")}`;
 }
@@ -1011,8 +1066,9 @@ function renderJudgeProfile(container, ratedCafes) {
 
 function renderSeasonProgress(container) {
   if (!container) return;
-  const total = cafesList.length;
-  const visited = cafesList.filter((cafe) => cafe.rated);
+  const activeCafes = getActiveCafes();
+  const total = activeCafes.length;
+  const visited = activeCafes.filter((cafe) => cafe.rated);
   const remaining = total - visited.length;
   const percent = total ? (visited.length / total) * 100 : 0;
   const dates = visited
@@ -1157,11 +1213,11 @@ function renderCafeAnalytics() {
   const categoryChart = document.getElementById("cafe-category-chart");
   if (!summary || !scoreChart || !categoryChart) return;
 
-  const ratedCafes = cafesList
-    .filter(
-      (cafe) =>
-        cafe.rated && String(cafe.score || "").trim().toUpperCase() !== "NVT",
-    )
+  // NVT-cafés tellen nergens mee in de rapporten
+  const reportCafes = getActiveCafes();
+  const nvtCount = cafesList.length - reportCafes.length;
+  const ratedCafes = reportCafes
+    .filter((cafe) => cafe.rated)
     .map((cafe) => ({ cafe, stats: computeScoreStats(cafe) }))
     .filter((entry) => entry.stats)
     .sort((a, b) => b.stats.percent - a.stats.percent);
@@ -1169,12 +1225,12 @@ function renderCafeAnalytics() {
     ? ratedCafes.reduce((sum, entry) => sum + entry.stats.percent, 0) /
       ratedCafes.length
     : null;
-  const completion = cafesList.length
-    ? (ratedCafes.length / cafesList.length) * 100
+  const completion = reportCafes.length
+    ? (ratedCafes.length / reportCafes.length) * 100
     : 0;
   const leader = ratedCafes[0];
   const priceObservations = (field) =>
-    cafesList
+    reportCafes
       .map((cafe) => {
         const price = parseCafePrice(cafe[field]);
         if (price === null) return null;
@@ -1228,10 +1284,16 @@ function renderCafeAnalytics() {
   `;
 
   summary.innerHTML = [
-    metricCard("Cafés in de lijst", cafesList.length, "In het overzicht"),
+    metricCard(
+      "Cafés in de lijst",
+      reportCafes.length,
+      nvtCount
+        ? `${nvtCount} NVT-${nvtCount === 1 ? "café" : "cafés"} niet meegeteld`
+        : "In het overzicht",
+    ),
     metricCard(
       "Scores toegekend",
-      `${ratedCafes.length} / ${cafesList.length}`,
+      `${ratedCafes.length} / ${reportCafes.length}`,
       `${completion.toFixed(0)}% met een jury-score`,
     ),
     metricCard(
@@ -1388,7 +1450,8 @@ function renderCafeAnalytics() {
  */
 function renderCafeDetailContent(cafe) {
   const stats = computeScoreStats(cafe);
-  if (!stats) return;
+  const nvt = isNvt(cafe);
+  if (!stats && !nvt) return;
 
   const slug = getCafeSlug(cafe);
   const container = document.getElementById(`detail-content-${slug}`);
@@ -1399,9 +1462,10 @@ function renderCafeDetailContent(cafe) {
   const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
     cafe.mapsQuery || `${displayName} ${address}`,
   )}`;
-  const percentText = `${stats.percent.toFixed(2)}%`;
+  const percentText = stats ? `${stats.percent.toFixed(2)}%` : "NVT";
+  const piconAvailable = hasPrice(cafe.pricePicon);
 
-  const piconFiche = cafe.pricePicon
+  const piconFiche = piconAvailable
     ? `
       <div class="bg-slate-900/50 border border-slate-800/80 rounded-xl p-4 flex items-center gap-4">
         <div class="p-3 bg-purple-500/10 text-purple-400 rounded-lg">
@@ -1409,7 +1473,7 @@ function renderCafeDetailContent(cafe) {
         </div>
         <div>
           <span class="block text-[10px] text-slate-500 uppercase font-bold tracking-wider">Prijs Picon</span>
-          <span class="text-sm font-bold text-white">${cafe.pricePicon}</span>
+          <span class="text-sm font-bold text-white">${formatEuro(cafe.pricePicon)}</span>
         </div>
       </div>`
     : `
@@ -1420,6 +1484,7 @@ function renderCafeDetailContent(cafe) {
         <div>
           <span class="block text-[10px] text-slate-500 uppercase font-bold tracking-wider">Prijs Picon</span>
           <span class="text-xs font-bold text-rose-400/80 uppercase">Niet beschikbaar</span>
+          ${stats ? '<span class="block text-[10px] text-slate-500 mt-0.5">Categorie Picon telt mee met 0 punten</span>' : ""}
         </div>
       </div>`;
 
@@ -1439,12 +1504,70 @@ function renderCafeDetailContent(cafe) {
       </div>`
     : "";
 
+  const scoreBox = stats
+    ? `
+        <div class="bg-slate-950/80 border border-slate-800 px-6 py-4 rounded-xl text-center min-w-[140px]">
+          <span class="block text-[10px] text-slate-500 uppercase font-extrabold tracking-wider">Eindscore</span>
+          <span class="text-3xl font-black text-amber-400">${percentText}</span>
+          <span class="block text-[10px] text-slate-400 mt-0.5">${stats.totalPoints.toFixed(1)} / ${stats.totalMax} ptn</span>
+        </div>`
+    : `
+        <div class="bg-slate-950/80 border border-rose-500/30 px-6 py-4 rounded-xl text-center min-w-[140px]">
+          <span class="block text-[10px] text-slate-500 uppercase font-extrabold tracking-wider">Eindscore</span>
+          <span class="text-3xl font-black text-rose-400">NVT</span>
+          <span class="block text-[10px] text-slate-400 mt-0.5">Niet van toepassing</span>
+        </div>`;
+
+  const visitBadge = stats
+    ? `<span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded bg-emerald-500/10 text-emerald-400 text-xs font-bold">
+              <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+              Bezocht
+            </span>`
+    : `<span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded bg-rose-500/10 text-rose-400 text-xs font-bold">
+              <span class="w-1.5 h-1.5 rounded-full bg-rose-400"></span>
+              NVT
+            </span>`;
+
+  const nvtNotice = `
+    <div class="bg-slate-900/40 border border-slate-800/80 rounded-2xl p-5 mb-8 flex items-start gap-4">
+      <div class="p-2.5 bg-rose-500/10 text-rose-400 rounded-xl mt-0.5">
+        <i data-lucide="circle-slash" class="w-5 h-5"></i>
+      </div>
+      <div class="space-y-1">
+        <span class="block text-[10px] text-rose-400 uppercase font-extrabold tracking-wider">Geen score</span>
+        <p class="text-slate-300 text-sm leading-relaxed">
+          Dit bezoek kon niet volgens de regels beoordeeld worden. Daarom krijgt het café geen eindscore en telt het niet mee in de ranking en de rapporten.
+        </p>
+      </div>
+    </div>`;
+
+  container.innerHTML = renderDetailLayout({
+    cafe,
+    displayName,
+    address,
+    mapsUrl,
+    visitBadge,
+    scoreBox,
+    piconFiche,
+    reportBlock,
+    scoreSections: stats ? renderDetailScoreSections(stats, piconAvailable) : nvtNotice,
+  });
+
+  lucide.createIcons();
+}
+
+/**
+ * Categorietegels en jurytabel van een beoordeeld café
+ */
+function renderDetailScoreSections(stats, piconAvailable) {
+  const piconIndex = JUDGE_CATEGORIES.indexOf("Picon");
   const categoriesGrid = JUDGE_CATEGORIES.map(
     (label, index) => `
       <div class="bg-slate-900/40 border border-slate-800/60 rounded-xl p-4 text-center">
         <span class="block text-xs text-slate-500 font-semibold mb-1">${label}</span>
         <span class="text-xl font-bold text-white">${stats.categoryAverages[index].toFixed(1)}</span>
         <span class="text-[10px] text-slate-500 block">/ ${CATEGORY_MAX}</span>
+        ${index === piconIndex && !piconAvailable ? '<span class="text-[10px] text-rose-400/80 block mt-1">Geen picon</span>' : ""}
       </div>`,
   ).join("");
 
@@ -1471,73 +1594,7 @@ function renderCafeDetailContent(cafe) {
     )
     .join("");
 
-  container.innerHTML = `
-    <!-- Cafe Header -->
-    <div class="bg-slate-900/40 border border-slate-800/80 rounded-2xl p-6 md:p-8 mb-6 relative overflow-hidden">
-      <div class="absolute top-0 right-0 w-48 h-48 bg-amber-500/5 rounded-full blur-3xl -mr-12 -mt-12"></div>
-      <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 relative z-10">
-        <div>
-          <div class="flex flex-wrap items-center gap-2 mb-3">
-            <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded bg-emerald-500/10 text-emerald-400 text-xs font-bold">
-              <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
-              Bezocht
-            </span>
-            <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded bg-slate-800 text-slate-300 text-xs font-semibold">
-              <i data-lucide="calendar" class="w-3.5 h-3.5 text-amber-500"></i>
-              <span>Bezocht op ${cafe.visitDate}</span>
-            </span>
-          </div>
-          <h1 class="text-3xl md:text-4xl font-black text-white">${displayName}</h1>
-
-          <!-- Google Maps Link -->
-          <a
-            href="${mapsUrl}"
-            target="_blank"
-            rel="noopener noreferrer"
-            class="text-slate-400 hover:text-amber-400 text-sm mt-2.5 inline-flex items-center gap-1.5 transition-colors group/link"
-            title="Open in Google Maps"
-          >
-            <i data-lucide="map-pin" class="w-4 h-4 text-slate-500 group-hover/link:text-amber-500 transition-colors"></i>
-            <span class="underline decoration-slate-700 group-hover/link:decoration-amber-400">${address}</span>
-            <i data-lucide="external-link" class="w-3.5 h-3.5 opacity-50 group-hover/link:opacity-100 transition-opacity"></i>
-          </a>
-        </div>
-        <div class="bg-slate-950/80 border border-slate-800 px-6 py-4 rounded-xl text-center min-w-[140px]">
-          <span class="block text-[10px] text-slate-500 uppercase font-extrabold tracking-wider">Eindscore</span>
-          <span class="text-3xl font-black text-amber-400">${percentText}</span>
-          <span class="block text-[10px] text-slate-400 mt-0.5">${stats.totalPoints.toFixed(1)} / ${stats.totalMax} ptn</span>
-        </div>
-      </div>
-    </div>
-
-    <!-- Practical Details Fiche -->
-    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
-      <!-- Plaats -->
-      <div class="bg-slate-900/50 border border-slate-800/80 rounded-xl p-4 flex items-center gap-4">
-        <div class="p-3 bg-amber-500/10 text-amber-400 rounded-lg">
-          <i data-lucide="map" class="w-5 h-5"></i>
-        </div>
-        <div>
-          <span class="block text-[10px] text-slate-500 uppercase font-bold tracking-wider">Locatie in café</span>
-          <span class="text-sm font-bold text-white">${cafe.seating || "Onbekend"}</span>
-        </div>
-      </div>
-      <!-- Prijs Pils -->
-      <div class="bg-slate-900/50 border border-slate-800/80 rounded-xl p-4 flex items-center gap-4">
-        <div class="p-3 bg-emerald-500/10 text-emerald-400 rounded-lg">
-          <i data-lucide="beer" class="w-5 h-5"></i>
-        </div>
-        <div>
-          <span class="block text-[10px] text-slate-500 uppercase font-bold tracking-wider">Prijs Pils</span>
-          <span class="text-sm font-bold text-white">${cafe.pricePils || "Onbekend"}</span>
-        </div>
-      </div>
-      <!-- Prijs Picon -->
-      ${piconFiche}
-    </div>
-
-    ${reportBlock}
-
+  return `
     <!-- Score Categories Grid -->
     <h2 class="text-xs font-bold uppercase tracking-wider text-slate-500 mb-4">
       Gemiddelde scores per categorie
@@ -1573,24 +1630,114 @@ function renderCafeDetailContent(cafe) {
               <td class="p-4">Gemiddelde</td>
               ${categoryAverageCells}
               <td class="p-4 text-right text-amber-400">${stats.totalPoints.toFixed(1)}</td>
-              <td class="p-4 text-right text-amber-400">${percentText}</td>
+              <td class="p-4 text-right text-amber-400">${stats.percent.toFixed(2)}%</td>
             </tr>
           </tfoot>
         </table>
       </div>
     </div>
   `;
-
-  lucide.createIcons();
 }
 
 /**
- * Rendert de detailpagina's van alle beoordeelde cafés
+ * Opmaak van een detailpagina: header, praktische fiche, verslag en scoreblok
+ */
+function renderDetailLayout({ cafe, displayName, address, mapsUrl, visitBadge, scoreBox, piconFiche, reportBlock, scoreSections }) {
+  return `
+    <!-- Cafe Header -->
+    <div class="bg-slate-900/40 border border-slate-800/80 rounded-2xl p-6 md:p-8 mb-6 relative overflow-hidden">
+      <div class="absolute top-0 right-0 w-48 h-48 bg-amber-500/5 rounded-full blur-3xl -mr-12 -mt-12"></div>
+      <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 relative z-10">
+        <div>
+          <div class="flex flex-wrap items-center gap-2 mb-3">
+            ${visitBadge}
+            <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded bg-slate-800 text-slate-300 text-xs font-semibold">
+              <i data-lucide="calendar" class="w-3.5 h-3.5 text-amber-500"></i>
+              <span>Bezocht op ${cafe.visitDate}</span>
+            </span>
+          </div>
+          <h1 class="text-3xl md:text-4xl font-black text-white">${displayName}</h1>
+
+          <!-- Google Maps Link -->
+          <a
+            href="${mapsUrl}"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="text-slate-400 hover:text-amber-400 text-sm mt-2.5 inline-flex items-center gap-1.5 transition-colors group/link"
+            title="Open in Google Maps"
+          >
+            <i data-lucide="map-pin" class="w-4 h-4 text-slate-500 group-hover/link:text-amber-500 transition-colors"></i>
+            <span class="underline decoration-slate-700 group-hover/link:decoration-amber-400">${address}</span>
+            <i data-lucide="external-link" class="w-3.5 h-3.5 opacity-50 group-hover/link:opacity-100 transition-opacity"></i>
+          </a>
+        </div>
+        ${scoreBox}
+      </div>
+    </div>
+
+    <!-- Practical Details Fiche -->
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+      <!-- Plaats -->
+      <div class="bg-slate-900/50 border border-slate-800/80 rounded-xl p-4 flex items-center gap-4">
+        <div class="p-3 bg-amber-500/10 text-amber-400 rounded-lg">
+          <i data-lucide="map" class="w-5 h-5"></i>
+        </div>
+        <div>
+          <span class="block text-[10px] text-slate-500 uppercase font-bold tracking-wider">Locatie in café</span>
+          <span class="text-sm font-bold text-white">${cafe.seating || "Onbekend"}</span>
+        </div>
+      </div>
+      <!-- Prijs Pils -->
+      <div class="bg-slate-900/50 border border-slate-800/80 rounded-xl p-4 flex items-center gap-4">
+        <div class="p-3 bg-emerald-500/10 text-emerald-400 rounded-lg">
+          <i data-lucide="beer" class="w-5 h-5"></i>
+        </div>
+        <div>
+          <span class="block text-[10px] text-slate-500 uppercase font-bold tracking-wider">Prijs Pils</span>
+          <span class="text-sm font-bold text-white">${hasPrice(cafe.pricePils) ? formatEuro(cafe.pricePils) : "Onbekend"}</span>
+        </div>
+      </div>
+      <!-- Prijs Picon -->
+      ${piconFiche}
+    </div>
+
+    ${reportBlock}
+
+    ${scoreSections}
+  `;
+}
+
+/**
+ * Maakt voor elk bezocht café (ook NVT) een detailpagina aan en vult ze.
+ * De pagina's worden volledig uit cafes.json gegenereerd; in index.html hoeft
+ * er niets toegevoegd te worden voor een nieuw café.
  */
 function renderCafeDetailPages() {
+  const main = document.querySelector("main");
+  if (!main || !document.getElementById("page-overview")) return;
+
+  main.querySelectorAll(".page-detail").forEach((page) => page.remove());
+
   cafesList
     .filter((cafe) => cafe.rated)
-    .forEach((cafe) => renderCafeDetailContent(cafe));
+    .forEach((cafe) => {
+      const slug = getCafeSlug(cafe);
+      const page = document.createElement("div");
+      page.id = `page-detail-${slug}`;
+      page.className = "page-view page-detail hidden max-w-4xl mx-auto px-4 py-8";
+      page.innerHTML = `
+        <button
+          onclick="showPage('overview')"
+          class="inline-flex items-center gap-2 text-sm text-slate-400 hover:text-amber-400 transition-colors mb-6 group"
+        >
+          <i data-lucide="arrow-left" class="w-4 h-4 group-hover:-translate-x-1 transition-transform"></i>
+          <span>Terug naar overzicht</span>
+        </button>
+        <div id="detail-content-${slug}"></div>
+      `;
+      main.appendChild(page);
+      renderCafeDetailContent(cafe);
+    });
 }
 
 /**
@@ -1606,22 +1753,33 @@ function filterCafes(filterType) {
 
   const activeBtn = document.getElementById(`btn-filter-${filterType}`);
   if (activeBtn) {
-    const counts = {
-      all: cafesList.length,
-      rated: cafesList.filter((c) => c.rated).length,
-      unrated: cafesList.filter((c) => !c.rated).length,
-    };
-    const labels = {
-      all: `Alle cafés (${counts.all})`,
-      rated: `Beoordeeld (${counts.rated})`,
-      unrated: `Nog te bezoeken (${counts.unrated})`,
-    };
-    activeBtn.innerText = labels[filterType];
     activeBtn.className =
       "filter-btn px-4 py-2 rounded-xl text-xs font-bold transition-all bg-amber-500 text-dark-900";
   }
 
   renderCafes();
+}
+
+/**
+ * Zet alle tellers op de homepage (filterknoppen en radar) op basis van cafes.json
+ */
+function renderCounters() {
+  const labels = {
+    all: `Alle cafés (${cafesList.length})`,
+    rated: `Bezocht (${cafesList.filter((c) => c.rated).length})`,
+    unrated: `Nog te bezoeken (${cafesList.filter((c) => !c.rated).length})`,
+  };
+  Object.entries(labels).forEach(([key, label]) => {
+    const btn = document.getElementById(`btn-filter-${key}`);
+    if (btn) btn.textContent = label;
+  });
+
+  const radarText = document.getElementById("radar-text");
+  if (radarText && !isDrunk) radarText.textContent = getRadarText();
+}
+
+function getRadarText() {
+  return `${getActiveCafes().length} actieve Groot-Waregemse cafés op de radar`;
 }
 
 /**
@@ -1789,7 +1947,7 @@ function toggleDrunkMode() {
       heroDesc.innerText =
         "Elke donderdag trekken we op pad om de lokale staminees in Groot-Waregem te keuren. Enkel echte cafés uit Waregem en de deelgemeentes Beveren-Leie, Desselgem, Nieuwenhove en Sint-Eloois-Vijve komen in aanmerking!";
     if (searchInput) searchInput.placeholder = "Zoek café...";
-    if (radarText) radarText.innerText = "42 Groot-Waregemse cafés op de radar";
+    if (radarText) radarText.innerText = getRadarText();
     if (seasonBadge)
       seasonBadge.innerHTML = `<span class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span> Huidig seizoen 2026`;
     if (leaderboardTitle)
@@ -1847,6 +2005,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   } catch (error) {
     console.error(error);
   }
+  renderCounters();
   renderCafes();
   renderNextVisitBanner();
   renderLeaderboard();
